@@ -1,3 +1,7 @@
+var realFs = require('fs')
+var gracefulFs = require('graceful-fs')
+gracefulFs.gracefulify(realFs)
+
 var _ = require('lodash');
 var express = require('express');
 var client = require('./cbclient.js')
