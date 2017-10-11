@@ -10,7 +10,8 @@ var app = angular.module('greenBoard', [
     'app.main',
     'app.target',
     'app.sidebar',
-    'app.infobar'
+    'app.infobar',
+    'app.compare'
 ]);
 
 app.run(['$location', '$rootScope', 'Data', function($location, $rootScope, Data){
@@ -139,5 +140,69 @@ app.config(['$stateProvider', '$urlRouterProvider',
                         }]
                 }
             })
-
+            .state('compareBuilds', {
+                templateUrl: "partials/comparer.html",
+                controller: "comparer",
+                resolve: {
+                    target: ['$stateParams', 'Data', function($stateParams, Data){
+                        $stateParams.target = $stateParams.target || Data.getCurrentTarget();
+                        return $stateParams.target
+                    }],
+                    versions: ['$stateParams', 'Data', 'QueryService', 'target',
+                        function($stateParams, Data, QueryService, target){
+                            var versions = Data.getTargetVersions(target)
+                            if(!versions){
+                                // get versions for Target
+                                versions = QueryService.getVersions(target)
+                                Data.setTargetVersions(versions)
+                            }
+                            return versions
+                        }],
+                    version1: ['$stateParams', 'versions',
+                        function ($stateParams, versions) {
+                            $stateParams.version1 = $stateParams.version1 || versions[versions.length - 1];
+                            return $stateParams.version1
+                    }],
+                    version2: ['$stateParams', 'versions',
+                        function ($stateParams, versions) {
+                            $stateParams.version2 = $stateParams.version2 || versions[versions.length - 1];
+                            return $stateParams.version2
+                        }],
+                    builds1: ["$stateParams", 'QueryService','target', 'version1',
+                        function ($stateParams, QueryService, target, version1) {
+                            return QueryService.getBuilds(target, version1, 2000, 5).then(function (builds) {
+                                return builds
+                            })
+                        }],
+                    builds2: ["$stateParams", 'QueryService', 'target', 'version2', 'builds1',
+                        function ($stateParams, QueryService, target, version2, builds1) {
+                            if($stateParams.version1 == version2){
+                                return builds1
+                            }
+                            return QueryService.getBuilds(target, version2, 2000, 5).then(function (builds) {
+                                return builds
+                            })
+                        }],
+                    build1: ['$stateParams', 'builds1',
+                        function($stateParams, builds1){
+                            $stateParams.build1 = $stateParams.build1 || builds1[builds1.length - 2].build;
+                            return $stateParams.build1
+                    }],
+                    build2: ['$stateParams', 'builds2',
+                        function($stateParams, builds2){
+                            $stateParams.build2 = $stateParams.build2 || builds2[builds2.length - 1].build;
+                            return $stateParams.build2
+                        }],
+                    build1details: ['$stateParams', 'Data', 'QueryService', 'build1',
+                        function ($stateParams, Data, QueryService, build1 ) {
+                            var details = QueryService.getBuildSummary(build1);
+                            return details;
+                    }],
+                    build2details: ['$stateParams', 'Data', 'QueryService', 'build2',
+                        function ($stateParams, Data, QueryService, build2 ) {
+                            var details = QueryService.getBuildSummary(build2);
+                            return details;
+                        }]
+                }
+            })
     }]);

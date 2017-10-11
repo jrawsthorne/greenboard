@@ -27,7 +27,7 @@ angular.module('svc.data', [])
                     } else if(typeArgs.indexOf(key) == -1) {
                         typeArgs+=","+key
                     }
-                    if(!_.any(_.pluck(_sideBarItems[type], "disabled"))){
+                    if(!_.some(_.map(_sideBarItems[type], "disabled"))){
                         // all items are selected now
                         typeArgs = null
                     }
@@ -199,12 +199,12 @@ angular.module('svc.data', [])
 
                         // if this is first item to be disabled within os/component
                         // then inverse toggling is performed
-                        var isAnyOfThisTypeDisabled = _.any(_.pluck(_sideBarItems[type], "disabled"))
+                        var isAnyOfThisTypeDisabled = _.some(_.map(_sideBarItems[type], "disabled"))
                         if(!isAnyOfThisTypeDisabled){
 
                             // very well then, inverse toggling it is
                             // disable every item but this one
-                            var siblingItems = _.pluck(_sideBarItems[type], "key")
+                            var siblingItems = _.map(_sideBarItems[type], "key")
                             siblingItems.forEach(function(k){
                                 if(k!=key){
                                     disableItem(k, type)
@@ -277,9 +277,9 @@ angular.module('svc.data', [])
                     }
 
                     // calculate absolute stats
-                    var absTotal = _.sum(_.pluck(subset, "totalCount"))
-                    var absFail = _.sum(_.pluck(subset, "failCount"))
-                    var absPending = _.sum(_.pluck(subset, "pending"))
+                    var absTotal = _.sum(_.map(_.uniq(subset), "totalCount"))
+                    var absFail = _.sum(_.map(_.uniq(subset), "failCount"))
+                    var absPending = _.sum(_.map(_.uniq(subset), "pending"))
                     var absStats = {
                         passed: absTotal-absFail,
                         failed: absFail,

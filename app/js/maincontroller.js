@@ -55,10 +55,11 @@ angular.module('app.main', [])
             $scope.activePanel = 0
 
             function updateScopeWithJobs(jobs){
-                var jobsCompleted = _.reject(jobs, "result", "PENDING")
-                var jobsUnstable = _.filter(jobs, "result", "UNSTABLE")
-                var jobsFailed = _.filter(jobs, "result", "FAILURE")
-                var jobsPending = _.filter(jobs, "result", "PENDING")
+                jobs = _.reject(jobs, "olderBuild", true)
+                var jobsCompleted = _.uniq(_.reject(jobs, ["result", "PENDING"]))
+                var jobsUnstable = _.uniq(_.filter(jobs, ["result", "UNSTABLE"]))
+                var jobsFailed = _.uniq(_.filter(jobs, ["result", "FAILURE"]))
+                var jobsPending = _.uniq(_.filter(jobs, ["result", "PENDING"]))
 
                 $scope.panelTabs = [
                     {title: "Jobs Completed", jobs: jobsCompleted, active: true},
@@ -68,16 +69,100 @@ angular.module('app.main', [])
                 ]
             }
 
+            function getJobs() {
+                var build = Data.getBuild()
+                var jobs = buildJobs[build].value
+                var allJobs = buildJobs['existing_builds'].value
+                var toReturn = processJob(jobs, allJobs)
+                return toReturn
+            }
 
-            updateScopeWithJobs(buildJobs)
-            Data.setBuildJobs(buildJobs)
+            function processJob(jobs, allJobs) {
+                var type = jobs.type
+                var existingJobs
+                if (type == "mobile"){
+                    existingJobs = _.pick(allJobs, "mobile")
+                }
+                else {
+                    existingJobs = _.omit(allJobs, "mobile")
+                    existingJobs = _.merge(allJobs['server'], allJobs['build'])
+                }
+                _.forEach(existingJobs, function (components, os) {
+                    _.forEach(components, function (jobNames, component) {
+                        _.forEach(jobNames, function (name, job) {
+                            if (!_.has(jobs['os'], os)){
+                                jobs['os'][os] = {};
+                            }
+                            if (!_.has(jobs['os'][os], component)){
+                                jobs['os'][os][component] = {};
+                            }
+                            if (!_.has(jobs['os'][os][component], job)){
+                                var pendJob = {}
+                                pendJob['pending'] = name.totalCount
+                                pendJob['totalCount'] = 0
+                                pendJob['failCount'] = 0
+                                pendJob['result'] = "PENDING"
+                                pendJob['priority'] = name.priority
+                                pendJob['url'] = name.url
+                                pendJob['build_id'] = ""
+                                pendJob['claim'] = ""
+                                pendJob['deleted'] = false
+                                pendJob['olderBuild'] = false
+                                pendJob['duration'] = 0
+                                pendJob['color'] = ''
+                                jobs['os'][os][component][job] = [pendJob]
+                            }
+                        })
+                    })
+                })
+
+                function clean(el) {
+                    function internalClean(el) {
+                        return _.transform(el, function(result, value, key) {
+                            var isCollection = _.isObject(value);
+                            var cleaned = isCollection ? internalClean(value) : value;
+
+                            if (isCollection && _.isEmpty(cleaned)) {
+                                return;
+                            }
+
+                            _.isArray(result) ? result.push(cleaned) : (result[key] = cleaned);
+                        });
+                    }
+
+                    return _.isObject(el) ? internalClean(el) : el;
+                }
+                var cleaned =  clean(jobs)
+                var toReturn = new Array()
+
+                _.forEach(cleaned.os, function (components, os) {
+                    _.forEach(components, function (jobNames, component) {
+                        _.forEach(jobNames, function (jobs, jobName) {
+                            _.forEach(jobs, function (jobDetail, job) {
+                                var tempJob = _.cloneDeep(jobDetail)
+                                tempJob['build'] = cleaned.build
+                                tempJob['name'] = jobName
+                                tempJob['component'] = component
+                                tempJob['os'] = os
+                                toReturn[toReturn.length] = tempJob
+                            })
+                        })
+                    })
+                })
+
+                return toReturn
+            }
+
+            var jobs = getJobs()
+            updateScopeWithJobs(jobs)
+            Data.setBuildJobs(jobs)
 
             // set sidebar items from build job data
-            var allPlatforms = _.uniq(_.pluck(buildJobs, "os"))
+            var allPlatforms = _.uniq(_.map(jobs, "os"))
                 .map(function(k){
                     return {key: k, disabled: false}
                 })
-            var allFeatures = _.uniq(_.pluck(buildJobs, "component"))
+            var allFeatures = _.uniq(_.map(jobs, "component"))
                 .map(function(k){
                     return {key: k, disabled: false}
                 })

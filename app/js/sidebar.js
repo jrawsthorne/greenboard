@@ -35,15 +35,15 @@ angular.module('app.sidebar', [])
 					if(items.buildVersion != last.buildVersion){
 						scope.buildVersion = items.buildVersion
 					    scope.sidebarItems = {
-					        platforms: _.pluck(items["platforms"], "key"),
-					        features: _.pluck(items["features"], "key")
+					        platforms: _.map(items["platforms"], "key"),
+					        features: _.map(items["features"], "key")
 					    }
 					}
 
 					// if all sidebar items of a type selected
 					// enable all checkmark
-					var noPlatformsDisabled = !_.any(_.pluck(items["platforms"], "disabled"))
-					var noFeaturesDisabled = !_.any(_.pluck(items["features"], "disabled"))
+					var noPlatformsDisabled = !_.some(_.map(items["platforms"], "disabled"))
+					var noFeaturesDisabled = !_.some(_.map(items["features"], "disabled"))
 					scope.disablePlatforms = noPlatformsDisabled ? false: true
 					scope.disableFeatures = noFeaturesDisabled ? false: true
 

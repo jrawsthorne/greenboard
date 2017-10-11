@@ -130,6 +130,14 @@ app.post('/claim/:bucket/:name/:build_id', function (req, res) {
 
 });
 
+app.get('/getBuildSummary/:buildId', function (req, res) {
+	var buildId = req.params.buildId;
+	client.getBuildSummary(buildId).then(function (buildDetails) {
+		res.send(buildDetails)
+    }).catch(function(err){
+    	console.log(err)
+	})
+});
 
 var server = app.listen(config.httpPort, config.httpListen, function () {
   var host = server.address().address;

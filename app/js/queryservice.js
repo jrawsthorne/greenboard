@@ -33,6 +33,13 @@ angular.module('svc.query', [])
 			claimJob: function(target, name, build_id, claim){
 				var url = ["claim", target, name, build_id].join("/")
 				return $http.post(url, {claim: claim})
-			}
+			},
+			getBuildSummary: function (buildId) {
+				var url = ["getBuildSummary", buildId].join("/")
+				return $http({"url": url, cache: true})
+					.then(function (response) {
+						return response.data
+                    })
+            }
 		  }
 		}])

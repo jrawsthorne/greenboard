@@ -239,7 +239,7 @@
               function _render(builds){
 
                     var stack = d3.layout.stack()
-                    var xLabels = _.pluck(builds, 'build')
+                    var xLabels = _.map(builds, 'build')
                     var passFailLayers = ['Passed', 'Failed'].map(function(k){
                       return builds.map(function(b, i){ return {x: xLabels[i], y: b[k] }})
                     })
