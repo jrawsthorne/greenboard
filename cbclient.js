@@ -132,6 +132,7 @@ module.exports = function () {
                 if (data.length == 0) {
                     return queryVersion()
                 }
+                queryVersion();
                 return Promise.resolve(versionsResponseCache[bucket])
             } else {
                 return queryVersion()
@@ -174,6 +175,7 @@ module.exports = function () {
                 if (response.length == 0) {
                     return queryBuild()
                 }
+                queryBuild();
                 return Promise.resolve(response)
             } else {
                 return queryBuild()
@@ -273,65 +275,11 @@ module.exports = function () {
 
             if (build in buildsResponseCache){
                 var data = buildsResponseCache[build]
+                getJobs();
                 return Promise.resolve(data)
             } else {
                 return getJobs()
             }
-
-/*            function processJobs(queryData, pendingJobs) {
-
-                // jobs for this build
-                var data = _.map(queryData, bucket)
-                var jobs = _.filter(data, 'build', build)
-                var jobNames = _.map(jobs, 'name')
-
-                /!*var pending = _.filter(data, function(j){
-                  // job is pending if name is not in known job names
-                  return _.indexOf(jobNames, j.name) == -1
-                })*!/
-
-                // convert total to pending for non-executed jobs
-                var pending = _.map(_.uniq(_.map(pendingJobs, bucket), 'name'), function (job) {
-                    job["pending"] = job.totalCount || job.pending
-                    job["totalCount"] = 0
-                    job["failCount"] = 0
-                    job["result"] = "PENDING"
-                    return job
-                })
-                return jobs.concat(pending)
-            }
-
-            // run query
-            function queryJob() {
-                return _query(bucket, strToQuery(Q)).then(function (data) {
-                    var pend = "select * from " + bucket + " where `build` like '" + ver + "%' " +
-                        "and name not in (select raw name from " + bucket + " b where b.`build` = '" + build + "') " +
-                        "order by `build` desc"
-                    if (ver + "pendingJobs" in buildsResponseCache && buildsResponseCache[ver + "pendingJobs"].length != 0) {
-                        var pending = buildsResponseCache[ver + "pendingJobs"]
-                        var jobs = processJobs(data, pending)
-                    } else {
-                        var jobs = _query(bucket, strToQuery(pend)).then(function (pending) {
-                            buildsResponseCache[build + "data"] = _.cloneDeep(data)
-                            buildsResponseCache[ver + "pendingJobs"] = _.cloneDeep(pending)
-                            return processJobs(data, pending)
-                        })
-                    }
-                    return jobs
-                })
-            }
-
-            if (build + "data" in buildsResponseCache) {
-                var data = buildsResponseCache[build + "data"]
-                var pendingjobs = buildsResponseCache[ver + "pendingJobs"]
-                if (data.length == 0 || pendingjobs.length == 0) {
-                    return queryJob()
-                }
-                var response = processJobs(data, pendingjobs)
-                return Promise.resolve(response)
-            } else {
-                return queryJob()
-            }*/
 
         },
         claimJobs: function (bucket, name, build_id, claim) {
@@ -358,7 +306,10 @@ module.exports = function () {
         getBuildSummary: function (buildId) {
             function getBuildDetails() {
                 return _getmulti('builds', [buildId,'existing_builds']).then(function (result) {
-                    //buildsResponseCache[buildId] = result;
+                    if (!("summary" in buildsResponseCache)){
+                        buildsResponseCache["summary"] = {}
+                    }
+                    buildsResponseCache["summary"][buildId] = result;
                     return processBuildDetails(result);
                 })
             }
@@ -480,8 +431,13 @@ module.exports = function () {
                 return cleaned
             }
 
-            var buildDetails = getBuildDetails();
-            return buildDetails;
+            if (("summary" in buildsResponseCache) && (buildId in buildsResponseCache["summary"])) {
+                var data = buildsResponseCache["summary"][buildId];
+                getBuildDetails();
+                return Promise.resolve(processBuildDetails(data));
+            }
+            return getBuildDetails();
+
         }
     };
 

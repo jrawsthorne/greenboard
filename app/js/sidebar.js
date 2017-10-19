@@ -120,7 +120,7 @@ angular.module('app.sidebar', [])
 			  function(newSideBarItem){
 
 			  	// we'll get notified here if this item was disabled
-			  	var thisItem = _.find(newSideBarItem[scope.type], "key", scope.key)
+			  	var thisItem = _.find(newSideBarItem[scope.type], {"key": scope.key})
 			  	if(thisItem){
 			  		scope.disabled = thisItem.disabled
 			    }
