@@ -280,6 +280,15 @@ angular.module('svc.data', [])
                     var absTotal = _.sum(_.map(_.uniq(subset), "totalCount"))
                     var absFail = _.sum(_.map(_.uniq(subset), "failCount"))
                     var absPending = _.sum(_.map(_.uniq(subset), "pending"))
+                    if (!absTotal){
+                        absTotal = 0;
+                    }
+                    if (!absFail){
+                        absFail = 0;
+                    }
+                    if (!absPending){
+                        absPending = 0;
+                    }
                     var absStats = {
                         passed: absTotal-absFail,
                         failed: absFail,
