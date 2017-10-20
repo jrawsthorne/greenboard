@@ -426,7 +426,7 @@ angular.module("app.compare", ['googlechart', 'svc.query'])
         $scope.compareBuilds1 = buildIds1;
         $scope.compareBuilds2 = buildIds2;
         $scope.graphTypes = ["BarChart", "ColumnChart", "LineChart" , "Table"];
-        $scope.graphType = "ColumnChart";
+        $scope.graphType = "Table";
         $scope.osRunPercChart = getRunPercChart(build1details.os, build2details.os, $scope.graphType,
             "OS", "Run %", "OS", "Total run % per OS");
         $scope.osPassPercChart = getPassPercChart(build1details.os, build2details.os,  $scope.graphType,

@@ -56,6 +56,7 @@ angular.module('app.main', [])
 
             function updateScopeWithJobs(jobs){
                 jobs = _.reject(jobs, "olderBuild", true)
+		jobs = _.reject(jobs, "deleted", true)
                 var jobsCompleted = _.uniq(_.reject(jobs, ["result", "PENDING"]))
                 var jobsUnstable = _.uniq(_.filter(jobs, ["result", "UNSTABLE"]))
                 var jobsFailed = _.uniq(_.filter(jobs, ["result", "FAILURE"]))

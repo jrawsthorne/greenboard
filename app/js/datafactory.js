@@ -85,7 +85,7 @@ angular.module('svc.data', [])
                         // ie... so if we are adding back an os key
                         // then get the component listed for this job
                         var altTypes = jobtype == "os" ? ["features", "component"] : ["platforms", "os"]
-                        var sideBarItem = _.find(_sideBarItems[altTypes[0]],"key", job[altTypes[1]])
+                        var sideBarItem = _.find(_sideBarItems[altTypes[0]], {"key":job[altTypes[1]]})
 
                         // only include this job if it's alternate type isn't disabled
                         // ie.. do not add back goxdcr if os is centos and centos is disabled
@@ -275,6 +275,9 @@ angular.module('svc.data', [])
                             return job[jobtype] == key
                         })
                     }
+		    subset = _.reject(subset, "olderBuild", true)
+                    subset = _.reject(subset, "deleted", true)
+                    subset = _.uniqBy(subset, "name")
 
                     // calculate absolute stats
                     var absTotal = _.sum(_.map(_.uniq(subset), "totalCount"))
