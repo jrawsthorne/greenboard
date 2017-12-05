@@ -80,13 +80,11 @@ app.config(['$stateProvider', '$urlRouterProvider',
                         }],
                     testsFilter: ['$stateParams', '$state', 'Data',
                     function ($stateParams, $state, Data) {
-                        Data.setBuildFilter()
                         $stateParams.testsFilter = Data.getBuildFilter()
                         return $stateParams.testsFilter
                     }],
                     buildsFilter: ['$stateParams', '$state', 'Data',
                     function ($stateParams, $state, Data) {
-                        Data.setBuildsFilter()
                         $stateParams.buildsFilter = Data.getBuildsFilter()
                         return $stateParams.buildsFilter
                     }]
@@ -100,7 +98,6 @@ app.config(['$stateProvider', '$urlRouterProvider',
                         'buildsFilter',
                         function($stateParams, QueryService, Data, target, version, testsFilter, buildsFilter){
                             return QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
-                                Data.setBuildFilter()
                                 Data.setVersionBuilds(builds)
                                 return Data.getVersionBuilds()
                             })

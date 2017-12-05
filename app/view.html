@@ -8,6 +8,7 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="#/greenboard">Greenboard</a>
+      <a class="navbar-brand" href="http://greenboard.hq.couchbase.com/">Greenboard(Old)</a>
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav navbar-right">
@@ -36,8 +37,10 @@
         <div class="col-sm-2 col-sm-push-1">
           <builds-filter-selector change-buildsFilter="changeBuildsFilter" />
         </div>
-        <div class="col-sm-2 col-sm-push-2">
+        <div class="col-sm-2 col-sm-push-1">
           <filter-selector change-filter="changeFilter" />
+        </div>
+        <div class="col-sm-1 col-sm-push-1">
           <button class="btn btn-primary" ui-sref="compareBuilds">Compare</button>
         </div>
       </div>

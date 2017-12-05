@@ -1,6 +1,6 @@
 angular.module('svc.data', [])
     .value("DEFAULT_FILTER_BY", 2000)
-    .value("DEFAULT_BUILDS_FILTER_BY", 5)
+    .value("DEFAULT_BUILDS_FILTER_BY", 10)
     .service('Data', ['$location', 'DEFAULT_FILTER_BY', 'DEFAULT_BUILDS_FILTER_BY',
         function ($location, DEFAULT_FILTER_BY, DEFAULT_BUILDS_FILTER_BY){
 
