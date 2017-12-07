@@ -31,6 +31,26 @@
                         Timeline.update(builds, id)
                       }
                     })
+		   
+		   scope.$watch(function () {
+                        return Data.getBuildFilter();
+                    }, function (newVal, oldVal) {
+                        if (newVal == oldVal){
+                            return
+                        }
+                        builds = Data.getVersionBuilds()
+                        Timeline.update(builds, id)
+                    });
+
+                    scope.$watch(function () {
+                        return Data.getBuildsFilter();
+                    }, function (newVal, oldVal) {
+                        if (newVal == oldVal){
+                            return
+                        }
+                        builds = Data.getVersionBuilds()
+                        Timeline.update(builds, id)
+                    })
 
                 }
               }

@@ -32,8 +32,8 @@ angular.module('app.target', [])
             }
         }])
 
-    .directive('filterSelector', ['Data',
-        function (Data) {
+    .directive('filterSelector', ['Data', 'QueryService',
+        function (Data, QueryService) {
             return {
                 restrict: 'E',
                 scope: {
@@ -46,22 +46,23 @@ angular.module('app.target', [])
                     scope.passFilters = [0, 2000, 5000]
 
                     scope.changeFilter = function (f) {
+			var target = Data.getCurrentTarget()
+                        var version = Data.getSelectedVersion()
+                        var buildsFilter = Data.getBuildsFilter()
+                        var testsFilter = f
+                        QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
+                            Data.setVersionBuilds(builds)
+                            return Data.getVersionBuilds()
+                        })
                         scope.activeFilter = f
                         Data.setBuildFilter(scope.activeFilter)
                     }
 
-                    scope.$watch(function () {
-                            return Data.getBuildFilter()
-                        },
-                        function (filterBy) {
-                            scope.activeFilter = filterBy
-                        })
-
                 }
             }
         }])
-    .directive('buildsFilterSelector', ['Data',
-        function (Data) {
+    .directive('buildsFilterSelector', ['Data', 'QueryService',
+        function (Data, QueryService) {
             return {
                 restrict: 'E',
                 scope: {
@@ -74,16 +75,18 @@ angular.module('app.target', [])
                     scope.buildsFilters = [5, 10, 25, 100]
 
                     scope.changeBuildsFilter = function (f) {
+			var target = Data.getCurrentTarget()
+                        var version = Data.getSelectedVersion()
+                        var testsFilter = Data.getBuildFilter()
+                        var buildsFilter = f
+                        QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
+                            Data.setVersionBuilds(builds)
+                            return Data.getVersionBuilds()
+                        })
                         scope.activeBuildFilter = f
-                        Data.setBuildFilter(scope.activeBuildFilter)
+                        Data.setBuildsFilter(scope.activeBuildFilter)
                     }
 
-                    scope.$watch(function () {
-                            return Data.getBuildsFilter()
-                        },
-                        function (buildsFilter) {
-                            scope.activeBuildFilter = buildsFilter
-                        })
                 }
             }
         }])
