@@ -72,15 +72,16 @@ angular.module('app.main', [])
 
             function getJobs() {
                 var build = Data.getBuild()
-                var jobs = buildJobs[build].value
-                var allJobs = buildJobs['existing_builds'].value
-                var toReturn = processJob(jobs, allJobs)
-                return toReturn
+                //var jobs = buildJobs[build].value
+                //var allJobs = buildJobs['existing_builds'].value
+                //var toReturn = processJob(jobs, allJobs)
+                return buildJobs
             }
 
             function processJob(jobs, allJobs) {
                 var type = jobs.type
                 var existingJobs
+		var version = Data.getSelectedVersion()
                 if (type == "mobile"){
                     existingJobs = _.pick(allJobs, "mobile")
                 }
@@ -97,7 +98,9 @@ angular.module('app.main', [])
                             if (!_.has(jobs['os'][os], component)){
                                 jobs['os'][os][component] = {};
                             }
-                            if (!_.has(jobs['os'][os][component], job)){
+                            if (!_.has(jobs['os'][os][component], job) && 
+                                ((name.hasOwnProperty('jobs_in')) &&
+                                    (name['jobs_in'].indexOf(version) > -1))) {
                                 var pendJob = {}
                                 pendJob['pending'] = name.totalCount
                                 pendJob['totalCount'] = 0

@@ -7,6 +7,7 @@ var _ = require('lodash');
 module.exports = function () {
 
     var cluster = new couchbase.Cluster(config.Cluster);
+    cluster.authenticate(config.RBACUser, config.RBACKPassword);
     var db = _db(config.DefaultBucket)
     var buildsResponseCache = {}
     var versionsResponseCache = {}
@@ -18,16 +19,19 @@ module.exports = function () {
         var sdk = _db('sdk')
         var mobile = _db('mobile')
         var builds = _db('builds')
+	var greenboard = _db('test_eventing')
         buckets['server'] = server
         buckets['sdk'] = sdk
         buckets['mobile'] = mobile
         buckets['builds'] = builds
+	buckets['greenboard'] = greenboard
         return buckets
     }
 
     function _db(bucket) {
         if (config.AuthPassword != "") {
-            cluster.authenticate(bucket, config.AuthPassword);
+            //cluster.authenticate(bucket, config.AuthPassword);
+	    cluster.authenticate(config.RBACUser, config.AuthPassword);
         }
         var db = cluster.openBucket(bucket)
         db.operationTimeout = 120 * 1000
@@ -115,7 +119,7 @@ module.exports = function () {
 
         queryVersions: function (bucket) {
             var Q = "SELECT DISTINCT SPLIT(`build`,'-')[0] AS version " +
-                "FROM builds WHERE SPLIT(`build`,'-')[0] is not null AND type = '" + bucket + "' ORDER BY version"
+                "FROM `test_eventing` WHERE SPLIT(`build`,'-')[0] is not null AND type = '" + bucket + "' ORDER BY version"
             // var Q = "SELECT DISTINCT SPLIT(`build`,'-')[0] AS version"+
             //         " FROM "+bucket+" where SPLIT(`build`,'-')[0] is not null ORDER BY version"
             function queryVersion() {
@@ -139,7 +143,7 @@ module.exports = function () {
             }
         },
         queryBuilds: function (bucket, version, testsFilter, buildsFilter) {
-            var Q = "SELECT totalCount, failCount, `build` FROM builds WHERE `build` LIKE '" + version + "%' " +
+            var Q = "SELECT totalCount, failCount, `build` FROM `test_eventing` WHERE `build` LIKE '" + version + "%' " +
                 " AND type = '" + bucket + "' AND totalCount >= " + testsFilter + " ORDER BY `build` DESC limit " + buildsFilter
             // var Q = "SELECT SUM(totalCount) AS totalCount, SUM(failCount) AS failCount, `build`  FROM "
             //     +bucket+" WHERE `build` LIKE '"+version+"%' GROUP BY `build` HAVING SUM(totalCount) >= " + testsFilter +
@@ -194,18 +198,19 @@ module.exports = function () {
             var Q = "SELECT * FROM " + bucket + " WHERE `build` = '" + build + "'"
 
             function getJobs() {
-                return _getmulti('builds', [build,'existing_builds']).then(function (result) {
-                    //var job = result[build].value
-                    //var allJobs = result['existing_builds'].value
-                    //var processedJobs =  processJob(job, allJobs)
-                    buildsResponseCache[build] = result
-                    return result
+                return _getmulti('greenboard', [build,'existing_builds']).then(function (result) {
+                    var job = result[build].value
+                    var allJobs = result['existing_builds'].value
+                    var processedJobs =  processJob(job, allJobs, build)
+                    buildsResponseCache[build] = processedJobs
+                    return processedJobs
                 })
             }
 
-            function processJob(build, allJobs) {
-                var type = build.type
+	function processJob(jobs, allJobs, buildId) {
+                var type = jobs.type
                 var existingJobs
+		var version = buildId.split('-')[0]
                 if (type == "mobile"){
                     existingJobs = _.pick(allJobs, "mobile")
                 }
@@ -216,7 +221,89 @@ module.exports = function () {
                 _.forEach(existingJobs, function (components, os) {
                     _.forEach(components, function (jobNames, component) {
                         _.forEach(jobNames, function (name, job) {
-                            if (!_.has(build['os'][os][component], job)){
+                            if (!_.has(jobs['os'], os)){
+                                jobs['os'][os] = {};
+                            }
+                            if (!_.has(jobs['os'][os], component)){
+                                jobs['os'][os][component] = {};
+                            }
+                            if (!_.has(jobs['os'][os][component], job) &&
+                                ((name.hasOwnProperty('jobs_in')) &&
+                                    (name['jobs_in'].indexOf(version) > -1))) {
+                                var pendJob = {}
+                                pendJob['pending'] = name.totalCount
+                                pendJob['totalCount'] = 0
+                                pendJob['failCount'] = 0
+                                pendJob['result'] = "PENDING"
+                                pendJob['priority'] = name.priority
+                                pendJob['url'] = name.url
+                                pendJob['build_id'] = ""
+                                pendJob['claim'] = ""
+                                pendJob['deleted'] = false
+                                pendJob['olderBuild'] = false
+                                pendJob['duration'] = 0
+                                pendJob['color'] = ''
+                                jobs['os'][os][component][job] = [pendJob]
+                            }
+                        })
+                    })
+                })
+
+                function clean(el) {
+                    function internalClean(el) {
+                        return _.transform(el, function(result, value, key) {
+                            var isCollection = _.isObject(value);
+                            var cleaned = isCollection ? internalClean(value) : value;
+
+                            if (isCollection && _.isEmpty(cleaned)) {
+                                return;
+                            }
+
+                            _.isArray(result) ? result.push(cleaned) : (result[key] = cleaned);
+                        });
+                    }
+
+                    return _.isObject(el) ? internalClean(el) : el;
+                }
+                var cleaned =  clean(jobs)
+                var toReturn = new Array()
+
+                _.forEach(cleaned.os, function (components, os) {
+                    _.forEach(components, function (jobNames, component) {
+                        _.forEach(jobNames, function (jobs, jobName) {
+                            _.forEach(jobs, function (jobDetail, job) {
+                                var tempJob = _.cloneDeep(jobDetail)
+                                tempJob['build'] = cleaned.build
+                                tempJob['name'] = jobName
+                                tempJob['component'] = component
+                                tempJob['os'] = os
+                                toReturn[toReturn.length] = tempJob
+                            })
+                        })
+                    })
+                })
+
+                return toReturn
+            }
+
+
+
+
+            function processJob1(build, allJobs, buildId) {
+                var type = build.type
+                var existingJobs
+		var version = buildId.split('-')[0]
+                if (type == "mobile"){
+                    existingJobs = _.pick(allJobs, "mobile")
+                }
+                else {
+                    existingJobs = _.omit(allJobs, "mobile")
+                    existingJobs = _.merge(allJobs['server'], allJobs['build'])
+                }
+                _.forEach(existingJobs, function (components, os) {
+                    _.forEach(components, function (jobNames, component) {
+                        _.forEach(jobNames, function (name, job) {
+			    if (!_.has(build['os'][os][component], job) && (name['jobs_in'].indexOf(version) > -1)){
                                 var pendJob = {}
                                 pendJob['pending'] = name.totalCount
                                 pendJob['totalCount'] = 0
@@ -305,7 +392,7 @@ module.exports = function () {
         },
         getBuildSummary: function (buildId) {
             function getBuildDetails() {
-                return _getmulti('builds', [buildId,'existing_builds']).then(function (result) {
+                return _getmulti('greenboard', [buildId,'existing_builds']).then(function (result) {
                     if (!("summary" in buildsResponseCache)){
                         buildsResponseCache["summary"] = {}
                     }
@@ -318,6 +405,8 @@ module.exports = function () {
                 var build = data[buildId].value;
                 var allJobs = data['existing_builds'].value;
                 var type = build.type;
+		var version = buildId.split('-')[0]
+		console.log(version)
                 var existingJobs;
                 if (type == "mobile"){
                     existingJobs = _.pick(allJobs, "mobile");
@@ -335,7 +424,7 @@ module.exports = function () {
                             if (!_.has(build['os'][os], component)){
                                 build['os'][os][component] = {};
                             }
-                            if (!_.has(build['os'][os][component], job)){
+                            if (!_.has(build['os'][os][component], job) && (job['jobs_in'].indexOf(version) > -1)){
                                 var pendJob = {};
                                 pendJob['pending'] = name.totalCount;
                                 pendJob['totalCount'] = 0;
@@ -447,4 +536,4 @@ module.exports = function () {
 
 
 // number of jobs per os
-// SELECT os,component, COUNT(*) as count from server GROUP BY os;
+// SELECT os,component, COUNT(*) as count fromserver GROUP BY os;
