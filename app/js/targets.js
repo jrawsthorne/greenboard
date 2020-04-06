@@ -46,7 +46,7 @@ angular.module('app.target', [])
                     scope.passFilters = [0, 2000, 5000]
 
                     scope.changeFilter = function (f) {
-			var target = Data.getCurrentTarget()
+			            var target = Data.getCurrentTarget()
                         var version = Data.getSelectedVersion()
                         var buildsFilter = Data.getBuildsFilter()
                         var testsFilter = f
@@ -75,16 +75,21 @@ angular.module('app.target', [])
                     scope.buildsFilters = [5, 10, 25, 100]
 
                     scope.changeBuildsFilter = function (f) {
-			var target = Data.getCurrentTarget()
+			            var target = Data.getCurrentTarget()
                         var version = Data.getSelectedVersion()
                         var testsFilter = Data.getBuildFilter()
+
+                        console.log("HELLO"+target+version+testsFilter+f)
                         var buildsFilter = f
                         QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
+                            console.log("BUILDS ARE NOW"+builds)
                             Data.setVersionBuilds(builds)
+                            Data.setBuildsFilter(scope.activeBuildFilter)
                             return Data.getVersionBuilds()
                         })
+                        
                         scope.activeBuildFilter = f
-                        Data.setBuildsFilter(scope.activeBuildFilter)
+                        
                     }
 
                 }

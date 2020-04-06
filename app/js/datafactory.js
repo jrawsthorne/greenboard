@@ -18,6 +18,7 @@ angular.module('svc.data', [])
             _buildsFilterBy = DEFAULT_BUILDS_FILTER_BY
             _initUrlParams = null
             _buildInfo = {}
+            _jobdetails = []
 
             function updateLocationUrl(type, key, disabled){
                 var typeArgs = $location.search()[type]
@@ -104,6 +105,7 @@ angular.module('svc.data', [])
             function getVersionBuildByFilter(){
                 // return version builds according to filter
                 var builds = _builds.filter(function(b){ return (b.Passed + b.Failed) > _filterBy})
+                console.log(builds)
                 if(_filterBy == 0){
                     // also do high pass so that we can view the low builds
                     builds = _builds.filter(function(b){ return (b.Passed + b.Failed) < DEFAULT_FILTER_BY})
@@ -162,6 +164,7 @@ angular.module('svc.data', [])
                         return 0
                     })
                     _builds = builds
+                    console.log("SETTINGBUILDS")
                 },
                 setBuildJobs: function(jobs){
                     _buildJobs = jobs

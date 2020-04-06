@@ -10,9 +10,13 @@ angular.module('svc.query', [])
 		        			})
 			},
 			getBuilds: function(target, version, testsFilter, buildsFilter){
+				console.log("getbuilds"+buildsFilter)
 				var url = ["builds", target, version, testsFilter, buildsFilter].join("/")
+				
 		        return $http({"url": url, cache: true})
 		        			.then(function(response){
+								console.log(response.data)
+								
 		        				return response.data
 		        			})				
 			},
@@ -40,6 +44,15 @@ angular.module('svc.query', [])
 					.then(function (response) {
 						return response.data
                     })
-            }
+			},
+			getJobDetails : function (jobName,build){
+				var url = ["getJobDetails",jobName,build].join("/")
+				console.log(url)
+				return $http({"url":url,cache:true})
+				.then(function(response){
+					console.log(response.data)
+					return response.data
+				})
+			}
 		  }
 		}])

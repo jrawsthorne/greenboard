@@ -18,6 +18,7 @@ angular.module('app.main', [])
             // update target versions when drop down target changes
             $scope.changeVersion = function(newVersion){
                 if(newVersion != version){
+                    console.log(version)
                     $state.go("target.version", {version: newVersion})
                 }
             }
@@ -26,9 +27,12 @@ angular.module('app.main', [])
     .controller('TimelineCtrl', ['$scope', '$state', 'versionBuilds', 'Data',
         function($scope, $state, versionBuilds, Data){
             $scope.versionBuilds = versionBuilds
-
+            console.log("TIMEclien CTRL")
+            
             // on build change reload jobs view
             $scope.onBuildChange = function(build){
+                console.log("BUILD CHANGE")
+                console.log(build)
                 $scope.build = build
                 Data.setBuild(build)
                 if(build.indexOf("-") != -1){ build = build.split("-")[1]}
@@ -55,19 +59,24 @@ angular.module('app.main', [])
             $scope.activePanel = 0
 
             function updateScopeWithJobs(jobs){
+
                 jobs = _.reject(jobs, "olderBuild", true)
-		jobs = _.reject(jobs, "deleted", true)
+                jobs = _.reject(jobs, "deleted", true)
+                console.log("UPDATESCOPE")
+                console.log(jobs)
+                
                 var jobsCompleted = _.uniq(_.reject(jobs, ["result", "PENDING"]))
                 var jobsUnstable = _.uniq(_.filter(jobs, ["result", "UNSTABLE"]))
                 var jobsFailed = _.uniq(_.filter(jobs, ["result", "FAILURE"]))
                 var jobsPending = _.uniq(_.filter(jobs, ["result", "PENDING"]))
+                
 
                 $scope.panelTabs = [
                     {title: "Jobs Completed", jobs: jobsCompleted, active: true},
                     {title: "Jobs Unstable", jobs: jobsUnstable},
                     {title: "Jobs Failed", jobs: jobsFailed},
                     {title: "Jobs Pending", jobs: jobsPending}
-                ]
+                ]                
             }
 
             function getJobs() {
@@ -75,19 +84,22 @@ angular.module('app.main', [])
                 //var jobs = buildJobs[build].value
                 //var allJobs = buildJobs['existing_builds'].value
                 //var toReturn = processJob(jobs, allJobs)
+                // console.log(buildJobs)
                 return buildJobs
             }
 
             function processJob(jobs, allJobs) {
                 var type = jobs.type
                 var existingJobs
-		var version = Data.getSelectedVersion()
+		        var version = Data.getSelectedVersion()
                 if (type == "mobile"){
                     existingJobs = _.pick(allJobs, "mobile")
                 }
                 else {
                     existingJobs = _.omit(allJobs, "mobile")
                     existingJobs = _.merge(allJobs['server'], allJobs['build'])
+                    fs = require('fs');
+                    fs.writeFile("merge.json", existingJobs)
                 }
                 _.forEach(existingJobs, function (components, os) {
                     _.forEach(components, function (jobNames, component) {
@@ -160,7 +172,8 @@ angular.module('app.main', [])
             var jobs = getJobs()
             updateScopeWithJobs(jobs)
             Data.setBuildJobs(jobs)
-
+            console.log("JOBS HEREEEEE")
+            console.log(jobs)
             // set sidebar items from build job data
             var allPlatforms = _.uniq(_.map(jobs, "os"))
                 .map(function(k){
@@ -170,6 +183,7 @@ angular.module('app.main', [])
                 .map(function(k){
                     return {key: k, disabled: false}
                 })
+            console.log(allPlatforms)
             Data.setSideBarItems({platforms: allPlatforms, features: allFeatures})
 
 
@@ -179,7 +193,17 @@ angular.module('app.main', [])
             }
 
             $scope.msToTime = msToTime
-
+            // $scope.link = " "
+            //         function isLink(job){
+            //             console.log("ISLINK")
+            //             if(job["single"]==false){
+            //                 return "#!/jobdetails/"+job["name"]
+            //                 $scope.link = "#!/jobdetails/"+job["name"]
+            //             }
+            //             return job["url"]+job["build_id"]
+            //             $scope.link = " "
+            //         }
+            // $scope.isLink = isLink
             $scope.$watch(function(){ return Data.getActiveJobs() },
                 function(activeJobs){
                     if(activeJobs){
@@ -189,6 +213,38 @@ angular.module('app.main', [])
 
 
         }])
+    .controller('JobDetailsCtrl',['$scope','$state','$stateParams','Data','target',
+                function($scope,$state,$stateParams,Data,target){
+                    console.log("HERE AT JOb DETAILS CONTROLLER")
+                    // $scope.$watch(function(){
+                    //     return jobDetails
+                    // },function(jobDets){
+                    //     $scope.jobDetails = jobDets
+                    //     console.log(jobDets)
+                    // })
+                    
+                    $scope.msToTime = msToTime
+                    var jobname = $stateParams.jobName
+                    
+                    $scope.$watch(function(){
+                        return Data.getActiveJobs()
+                    },
+                        function(activeJobs){
+                            // activeJobs = _.reject(activeJobs, "olderBuild", true)
+                            activeJobs = _.reject(activeJobs, "deleted", true)
+                            
+                            var requiredJobs = _.filter(activeJobs,["name",jobname])
+                                $scope.jobDetails = requiredJobs
+                                console.log(requiredJobs)
+                           
+                                $scope.jobname = jobname
+                                $scope.build = requiredJobs[0].build
+                        }
+                    )
+                    // console.log($stateParams.activeJobs)
+
+    }])
+
     .directive('claimCell', ['Data', 'QueryService', function(Data, QueryService){
         return {
             restrict: 'E',

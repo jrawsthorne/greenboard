@@ -13,7 +13,7 @@ app.use(express.static('app'));
 app.use(bodyParser.json());
 
 app.get('/versions/:bucket?', function(req, res){
-
+ console.log("HERE AT GET")
   var bucket = req.params.bucket
   var versions = []
   client.queryVersions(bucket)
@@ -29,12 +29,34 @@ app.get('/versions/:bucket?', function(req, res){
   	})
 })
 
+
+app.get('/getJobDetails/:jobName',function(req,res){
+	console.log("Getting Job Details For"+req.params.jobName)
+	var runs = []
+	var jobName = req.params.jobName
+	var build = req.params.build
+	client.queryJobDetails(jobName,build)
+	.then(function(data){
+		runs = data[0]['runs']
+		console.log(runs)
+	   res.send(runs);
+	}).catch(function(err){
+		// err
+	  console.log(err)
+	  res.send(runs)
+	})
+})
+
+
 app.get('/builds/:bucket/:version/:testsFilter/:buildsFilter', function(req, res){
+	console.log("HERE AT GET2")
 
   var bucket = req.params.bucket
+  console.log(bucket)
   var version = req.params.version
   var testsFilter = req.params.testsFilter
   var buildsFilter = req.params.buildsFilter
+  console.log(buildsFilter+testsFilter+version)
   var builds = []
   client.queryBuilds(bucket, version, testsFilter, buildsFilter)
   	.then(function(data){
@@ -46,7 +68,8 @@ app.get('/builds/:bucket/:version/:testsFilter/:buildsFilter', function(req, res
   				return -1
   			}
   			return 0
-  		})
+		  })
+	
 	 	res.send(data);
   	}).catch(function(err){
   		// err
@@ -57,6 +80,7 @@ app.get('/builds/:bucket/:version/:testsFilter/:buildsFilter', function(req, res
 
 
 app.get('/timeline/:version/:bucket/:testsFilter/:buildsFilter', function(req, res){
+	console.log("HERE AT GET3")
 	
 	var dataMap = []
 	var version = req.params.version
@@ -86,10 +110,11 @@ app.get('/timeline/:version/:bucket/:testsFilter/:buildsFilter', function(req, r
 })
 
 app.get('/jobs/:build/:bucket?', function(req, res){
+	console.log("HERE AT GET4")
 
 	var bucket = req.params.bucket
     var build = req.params.build
-
+	console.log(build)
 	client.jobsForBuild(bucket, build)
 		.then(function(breakdown){
 
@@ -101,6 +126,7 @@ app.get('/jobs/:build/:bucket?', function(req, res){
 })
 
 app.get('/info/:build/:bucket', function(req, res){
+	console.log("HERE AT GET5")
 
 	var build = req.params.build
 	var bucket = req.params.bucket
@@ -110,17 +136,21 @@ app.get('/info/:build/:bucket', function(req, res){
 			console.log(err)
 			res.send({err: err})
 		}  else {
+			console.log("INFO IS GET 5")
+			console.log(info)
 			res.send(info)
 		}
 	})
 })
 
 app.post('/claim/:bucket/:name/:build_id', function (req, res) {
+	console.log("HERE AT GET6")
+
   var bucket = req.params.bucket
   var name = req.params.name
   var build_id = req.params.build_id
   var claim = req.body.claim
-
+ console.log(bucket)
   client.claimJobs(bucket, name, build_id, claim)
     .then(function(jobs){
       res.send('POST request to the homepage');
@@ -131,6 +161,8 @@ app.post('/claim/:bucket/:name/:build_id', function (req, res) {
 });
 
 app.get('/getBuildSummary/:buildId', function (req, res) {
+	console.log("HERE AT GET7")
+
 	var buildId = req.params.buildId;
 	client.getBuildSummary(buildId).then(function (buildDetails) {
 		res.send(buildDetails)

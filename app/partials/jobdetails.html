@@ -1,0 +1,32 @@
+    <div class="container text-center">
+    <h2>All Test Runs</h2>
+    <h3> Job Name : <b>{{jobname}} </b> Build : <b> {{build}} </b> </h3>
+    <div class="table-responsive">
+    <table class="table-striped table-bordered table-condensed table-hover" style="width:80%; margin:0 10%;">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col" class="text-center">#</th>
+            <th scope="col" class="text-center">Job Url</th>
+            <th scope="col" class="text-center">Result</th>
+            <th scope="col" class="text-center">Passed Count</th>
+            <th scope="col" class="text-center">Total Count</th>
+            <th scope="col" class="text-center">Duration</th>
+
+          </tr>
+        </thead>
+        <tbody ng-repeat="job in jobDetails">
+          <tr>
+            <th scope="row">{{$index + 1}}</th>
+            <td>
+                <a href="{{job.url}}{{job.build_id}}">
+                    Link
+                </a></td>
+            <td><span class={{job.result}}>{{job.result}}</span></td>
+            <td>{{job.totalCount - job.failCount}}</td>
+            <td>{{job.totalCount}}</td>
+            <td>{{msToTime(job.duration)}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>

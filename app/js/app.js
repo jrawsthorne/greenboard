@@ -35,11 +35,30 @@ app.run(['$location', '$rootScope', 'Data', function($location, $rootScope, Data
 
 app.config(['$stateProvider', '$urlRouterProvider',
     function($stateProvider, $urlRouterProvider){
-
+        console.log("HERE")
         // TODO: external bootstrap with now testing build!
         $urlRouterProvider.otherwise("/server/7.0.0/latest");
 
         $stateProvider
+            .state('jobdetails', {
+                url:"/jobdetails/:jobName",
+                controller:"JobDetailsCtrl",
+                templateUrl: "partials/jobdetails.html",
+                params:{
+                  activeJobs : null  
+                },
+                resolve:{
+                    // jobDetails : ['$stateParams','QueryService',function($stateParams,QueryService){
+                    //     var jobName = $stateParams.jobName
+                    //     console.log("Jo bdetails")
+                    //     return QueryService.getJobDetails(jobName)
+                    // }]
+                    target: ['$stateParams','$state', 'Data',
+                    function ($stateParams, $state, Data) {
+                        return Data.getCurrentTarget
+                    }]
+                }
+            })
             .state('target', {
                 url: "/:target",
                 abstract: true,
@@ -50,7 +69,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
                     }],
                     targetVersions: ['$stateParams', 'Data', 'QueryService',
                         function($stateParams, Data, QueryService){
-
+                            console.log("target")
                             var target = $stateParams.target
                             var versions = Data.getTargetVersions(target)
                             if(!versions){
@@ -68,14 +87,15 @@ app.config(['$stateProvider', '$urlRouterProvider',
                 resolve: {
                     version: ['$stateParams', '$state', '$location', 'targetVersions', 'target',
                         function($stateParams, $state, $location, targetVersions, target){
-
                             var version = $stateParams.version || "latest"
                             if ((version == "latest") || targetVersions.indexOf(version) == -1){
                                 // uri is either latest version or some unknown version of target
                                 // just use latested known version of target
                                 version = targetVersions[targetVersions.length-1]
+                                console.log("VERSION IS NOW "+version)
                             }
                             $stateParams.version = version
+                            console.log($stateParams.version)
                             return version
                         }],
                     testsFilter: ['$stateParams', '$state', 'Data',
@@ -97,6 +117,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
                     versionBuilds: ['$stateParams', 'QueryService', 'Data', 'target', 'version', 'testsFilter',
                         'buildsFilter',
                         function($stateParams, QueryService, Data, target, version, testsFilter, buildsFilter){
+                            console.log("timeline")
                             return QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
                                 Data.setVersionBuilds(builds)
                                 return Data.getVersionBuilds()
@@ -115,6 +136,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
                 resolve: {
                     build: ['$stateParams', '$state', 'versionBuilds',
                         function($stateParams, $state, versionBuilds){
+                            console.log("forwarder"+$stateParams.build)
+                            
                             var build = $stateParams.build || "latest"
                             if((build == "latest") && (versionBuilds.length > 0)){
                                 var vbuild = versionBuilds[versionBuilds.length-1].build
@@ -132,6 +155,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
                 resolve: {
                     buildJobs: ['$stateParams', 'QueryService', 'Data', 'target',
                         function($stateParams, QueryService, Data, target){
+                            console.log("jobsctrl")
                             var build = Data.getBuild()
                             return QueryService.getJobs(build, target)
                         }]
