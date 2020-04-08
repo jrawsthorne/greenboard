@@ -47,7 +47,6 @@ module.exports = function () {
     }
 
     function _query(bucket, q) {
-        console.log(bucket)
         var db = bucketConnections["greenboard"]
         if (!db.connected) {
             db = _db(bucket);
@@ -58,7 +57,6 @@ module.exports = function () {
                 if (!err) {
                     resolve(components)
                 } else {
-                    console.log(bucket)
                     reject(err)
                 }
             })
@@ -76,10 +74,8 @@ module.exports = function () {
             db.getMulti(docIds, function (error, result) {
                 if (error) {
                     reject(error)
-                    console.log("ERROR "+error)
                 } else {
                     resolve(result)
-                    console.log("RESULT "+result)
                 }
             })
         })
@@ -180,7 +176,6 @@ module.exports = function () {
                         build: buildSet.build
                     }
                 })
-                // console.log(builds)
                 return builds
             }
 
@@ -199,7 +194,10 @@ module.exports = function () {
             //     if (response.length == 0) {
             //         return queryBuild()
             //     }
-            //     queryBuild();
+            //     queryBuild().then(function(data){
+            //         return data
+            //     })
+
             //     return Promise.resolve(response)
             // } else {
                 return queryBuild()
@@ -211,7 +209,6 @@ module.exports = function () {
                 db = _db(bucket);
                 bucketConnections[bucket] = db
             }
-            console.log("BGETBUILD INFO"+build)
             db.get(build, fun)
         },
         jobsForBuild: function (bucket, build) {
@@ -219,23 +216,16 @@ module.exports = function () {
             var Q = "SELECT * FROM " + bucket + " WHERE `build` = '" + build + "'"
 
             function getJobs() {
-                console.log(build)
-                console.log("JOBS")
                 return _getmulti('greenboard', [build,'existing_builds']).then(function (result) {
-                    console.log("getJobs result")
-                    // console.log(result)
                     var job = result[build].value
                     var allJobs = result['existing_builds'].value
                     var processedJobs =  processJob(job, allJobs, build)
                     buildsResponseCache[build] = processedJobs
-                    fs = require('fs');
-                    fs.writeFile("merge.json", JSON.stringify(processedJobs,null,4))
                     return processedJobs
                 })
             }
 
 	        function processJob(jobs, allJobs, buildId) {
-                console.log("PROCESSING JOBS")
                 var type = jobs.type
                 var existingJobs
                 var version = buildId.split('-')[0]
@@ -248,7 +238,6 @@ module.exports = function () {
                     existingJobs = _.merge(allJobs['server'], allJobs['build'])
                     
                 }
-                console.log("COUNTING")
                 countt = 0
                 _.forEach(existingJobs, function (components, os) {
                     _.forEach(components, function (jobNames, component) {
@@ -282,7 +271,6 @@ module.exports = function () {
                         })
                     })
                 })
-                console.log(countt)
                 function clean(el) {
                     function internalClean(el) {
                         return _.transform(el, function(result, value, key) {
@@ -366,7 +354,6 @@ module.exports = function () {
                 var allJobs = data['existing_builds'].value;
                 var type = build.type;
 		var version = buildId.split('-')[0]
-		console.log(version)
                 var existingJobs;
                 if (type == "mobile"){
                     existingJobs = _.pick(allJobs, "mobile");

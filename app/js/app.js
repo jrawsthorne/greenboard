@@ -39,7 +39,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
         // TODO: external bootstrap with now testing build!
         $urlRouterProvider.otherwise("/server/7.0.0/latest");
 
-        $stateProvider
+        $stateProvider              
             .state('jobdetails', {
                 url:"/jobdetails/:jobName",
                 controller:"JobDetailsCtrl",
@@ -101,6 +101,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
                     testsFilter: ['$stateParams', '$state', 'Data',
                     function ($stateParams, $state, Data) {
                         $stateParams.testsFilter = Data.getBuildFilter()
+                        console.log("RESOLVING")
                         return $stateParams.testsFilter
                     }],
                     buildsFilter: ['$stateParams', '$state', 'Data',
@@ -117,8 +118,10 @@ app.config(['$stateProvider', '$urlRouterProvider',
                     versionBuilds: ['$stateParams', 'QueryService', 'Data', 'target', 'version', 'testsFilter',
                         'buildsFilter',
                         function($stateParams, QueryService, Data, target, version, testsFilter, buildsFilter){
-                            console.log("timeline")
-                            return QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
+                            var tests = Data.getBuildFilter()
+                            var builds = Data.getBuildsFilter()
+                            console.log(tests+builds)
+                            return QueryService.getBuilds(target, version, tests, builds).then(function(builds){
                                 Data.setVersionBuilds(builds)
                                 return Data.getVersionBuilds()
                             })
@@ -134,8 +137,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
                     $state.go('target.version.builds.build.jobs')
                 }],
                 resolve: {
-                    build: ['$stateParams', '$state', 'versionBuilds',
-                        function($stateParams, $state, versionBuilds){
+                    build: ['$stateParams', '$state', 'versionBuilds','Data',
+                        function($stateParams, $state, versionBuilds,Data){
                             console.log("forwarder"+$stateParams.build)
                             
                             var build = $stateParams.build || "latest"
@@ -143,6 +146,8 @@ app.config(['$stateProvider', '$urlRouterProvider',
                                 var vbuild = versionBuilds[versionBuilds.length-1].build
                                 $stateParams.build = vbuild.split('-')[1]
                             } else if(versionBuilds.length <= 0){
+                                Data.setBuildsFilter(5)
+                                Data.setBuildFilter(0)
                                 $state.go('target.version.builds', {target: $stateParams.target, version: $stateParams.version})
                             }
                             return $stateParams.build

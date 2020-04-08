@@ -19,6 +19,8 @@ angular.module('app.main', [])
             $scope.changeVersion = function(newVersion){
                 if(newVersion != version){
                     console.log(version)
+                    Data.setBuildsFilter(10)
+                    Data.setBuildFilter(2000)
                     $state.go("target.version", {version: newVersion})
                 }
             }

@@ -50,6 +50,7 @@
                         return Data.getBuildsFilter();
                     }, function (newVal, oldVal) {
                         if (newVal == oldVal){
+                            console.log(newVal,oldVal)
                             return
                         }
                         console.log("WATCHING")

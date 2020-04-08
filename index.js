@@ -69,13 +69,16 @@ app.get('/builds/:bucket/:version/:testsFilter/:buildsFilter', function(req, res
   			}
   			return 0
 		  })
-	
-	 	res.send(data);
+		console.log("WRITING")
+		console.log(data)
+		res.send(JSON.stringify(data))
+
   	}).catch(function(err){
   		// err
 		console.log(err)
 		res.send(builds)
-  	})
+	  })
+
 })
 
 
@@ -170,6 +173,8 @@ app.get('/getBuildSummary/:buildId', function (req, res) {
     	console.log(err)
 	})
 });
+
+
 
 var server = app.listen(config.httpPort, config.httpListen, function () {
   var host = server.address().address;
