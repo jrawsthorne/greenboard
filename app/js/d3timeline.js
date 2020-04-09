@@ -54,10 +54,11 @@
                             return
                         }
                         console.log("WATCHING")
-                        
+                        scope.spin = true
                         builds = Data.getVersionBuilds()
                         console.log(builds)
                         Timeline.update(builds, id)
+                        scope.spin = false
                     })
 
                 }

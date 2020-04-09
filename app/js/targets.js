@@ -82,13 +82,25 @@ angular.module('app.target', [])
 
                         console.log("HELLO"+target+version+testsFilter+f)
                         var buildsFilter = f
-                        QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
+                        var retry = 3
+                        var get = function(){QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
                             console.log("BUILDS ARE NOW"+builds)
                             Data.setVersionBuilds(builds)
+                            console.log(builds.length,scope.activebuildsFilter,buildsFilter)
+                            // if(builds.length != buildsFilter && retry!=0){
+                            //     console.log("CALLING AGAIN")
+                            //     Data.setBuildsFilter(0)
+                            //     setTimeout(function(){get()},3000)
+                            //     retry = retry - 1
+                            // }
+                            // else{
                             Data.setBuildsFilter(scope.activeBuildFilter)
+                            // }
                             return Data.getVersionBuilds()
-                        })
-                        Data.setBuildsFilter(scope.activeBuildFilter)
+                            
+                        })}
+                        get();
+                        // Data.setBuildsFilter(scope.activeBuildFilter)
                         scope.activeBuildFilter = f
                         
                     }

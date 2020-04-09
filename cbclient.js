@@ -191,13 +191,11 @@ module.exports = function () {
             // if (version in buildsResponseCache) {
             //     var data = buildsResponseCache[version]
             //     var response = processBuild(data)
+            //     console.log(response)
             //     if (response.length == 0) {
             //         return queryBuild()
             //     }
-            //     queryBuild().then(function(data){
-            //         return data
-            //     })
-
+            //     queryBuild()
             //     return Promise.resolve(response)
             // } else {
                 return queryBuild()

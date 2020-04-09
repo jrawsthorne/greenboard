@@ -60,6 +60,23 @@ angular.module('app.main', [])
             $scope.reverse = true
             $scope.activePanel = 0
 
+            
+
+                $scope.onselect = 
+                    function(jobname){
+                        var activeJobs = Data.getActiveJobs()
+                        // activeJobs = _.reject(activeJobs, "olderBuild", true)
+                        activeJobs = _.reject(activeJobs, "deleted", true)
+                        
+                        var requiredJobs = _.filter(activeJobs,["name",jobname])
+                            $scope.selectedjobdetails = requiredJobs
+                            console.log(requiredJobs)
+                            $scope.selectedjobname = jobname
+                            $scope.selectedbuild = requiredJobs[0].build
+                    }
+                
+            
+
             function updateScopeWithJobs(jobs){
 
                 jobs = _.reject(jobs, "olderBuild", true)
