@@ -153,7 +153,7 @@ app.post('/claim/:bucket/:name/:build_id', function (req, res) {
   var name = req.params.name
   var build_id = req.params.build_id
   var claim = req.body.claim
- console.log(bucket)
+  console.log(bucket)
   client.claimJobs(bucket, name, build_id, claim)
     .then(function(jobs){
       res.send('POST request to the homepage');

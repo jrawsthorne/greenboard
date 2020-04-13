@@ -63,12 +63,19 @@ angular.module('app.main', [])
             
 
                 $scope.onselect = 
-                    function(jobname){
+                    function(jobname,os,comp){
                         var activeJobs = Data.getActiveJobs()
                         // activeJobs = _.reject(activeJobs, "olderBuild", true)
                         activeJobs = _.reject(activeJobs, "deleted", true)
                         
-                        var requiredJobs = _.filter(activeJobs,["name",jobname])
+                        var filters = {"name":jobname,"os":os,"component":comp}
+                        var requiredJobs = activeJobs
+                        _.forEach(filters, function(value, key) {
+                            requiredJobs = _.filter(requiredJobs, [key,value]);
+                        });
+
+                            // requiredJobs = _.filter(activeJobs,["name",jobname,"os"])
+                            $scope.len = requiredJobs.length
                             $scope.selectedjobdetails = requiredJobs
                             console.log(requiredJobs)
                             $scope.selectedjobname = jobname
@@ -83,7 +90,7 @@ angular.module('app.main', [])
                 jobs = _.reject(jobs, "deleted", true)
                 console.log("UPDATESCOPE")
                 console.log(jobs)
-                
+                console.log(_.filter(jobs,["name","debian10-os_certify_fts"]))
                 var jobsCompleted = _.uniq(_.reject(jobs, ["result", "PENDING"]))
                 var jobsUnstable = _.uniq(_.filter(jobs, ["result", "UNSTABLE"]))
                 var jobsFailed = _.uniq(_.filter(jobs, ["result", "FAILURE"]))
@@ -103,7 +110,7 @@ angular.module('app.main', [])
                 //var jobs = buildJobs[build].value
                 //var allJobs = buildJobs['existing_builds'].value
                 //var toReturn = processJob(jobs, allJobs)
-                // console.log(buildJobs)
+                console.log(buildJobs)
                 return buildJobs
             }
 
@@ -275,6 +282,23 @@ angular.module('app.main', [])
                     scope.job.claim = scope.job.customClaim
                 }
 
+                var oldClaim = ""
+                
+                $(elem).mouseover(function(){
+                    if(scope.job.claim != ""){
+                        oldClaim = scope.job.claim
+                    }
+                    else{
+                        console.log(scope.job)
+                        oldClaim = "No Claim for this build"
+                    }
+                    $('[data-toggle="popover"]').popover({
+                        placement : 'top',
+                        trigger : 'hover',
+                        content : scope.job.claim
+                    });
+                
+                });
                 // publish on blur
                 scope.editClaim = false
                 scope.saveClaim = function(){

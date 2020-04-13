@@ -81,6 +81,7 @@ module.exports = function () {
         })
     }
 
+    
     function _get(bucket, documentId) {
         var db = bucketConnections[bucket];
         if (!db.connected){
@@ -212,11 +213,23 @@ module.exports = function () {
         jobsForBuild: function (bucket, build) {
             var ver = build.split('-')[0]
             var Q = "SELECT * FROM " + bucket + " WHERE `build` = '" + build + "'"
-
+            
             function getJobs() {
-                return _getmulti('greenboard', [build,'existing_builds']).then(function (result) {
-                    var job = result[build].value
-                    var allJobs = result['existing_builds'].value
+                // return _getmulti('greenboard', [build,'existing_builds']).then(function (result) {
+                //     var job = result[build].value
+                //     fs = require("fs")
+                //     fs.writeFile("news.json",JSON.stringify(result[build]))
+                //     var allJobs = result['existing_builds'].value
+                //     var processedJobs =  processJob(job, allJobs, build)
+                //     buildsResponseCache[build] = processedJobs
+                //     return processedJobs
+                // })
+                var Q1 = "SELECT * FROM `test_eventing` USE KEYS ['" + build + "','existing_builds']"
+                return _query('greenboard',strToQuery(Q1)).then(function(result){
+                    fs = require("fs")
+                    fs.writeFile("news.json",JSON.stringify(result))
+                    var job = result[0]["test_eventing"]
+                    var allJobs = result[1]["test_eventing"]
                     var processedJobs =  processJob(job, allJobs, build)
                     buildsResponseCache[build] = processedJobs
                     return processedJobs
@@ -236,7 +249,10 @@ module.exports = function () {
                     existingJobs = _.merge(allJobs['server'], allJobs['build'])
                     
                 }
+               
                 countt = 0
+                fs = require("fs")
+                                fs.writeFile("neww.json",JSON.stringify(jobs,null,4))
                 _.forEach(existingJobs, function (components, os) {
                     _.forEach(components, function (jobNames, component) {
                         _.forEach(jobNames, function (name, job) {
@@ -245,10 +261,14 @@ module.exports = function () {
                             }
                             if (!_.has(jobs['os'][os], component)){
                                 jobs['os'][os][component] = {};
+                                if(component == "RQG"){
+                                    console.log("RQG")
+                                }
                             }
                             if (!_.has(jobs['os'][os][component], job) &&
                                 ((name.hasOwnProperty('jobs_in')) &&
                                     (name['jobs_in'].indexOf(version) > -1))) {
+                                
                                 var pendJob = {}
                                 pendJob['pending'] = name.totalCount
                                 pendJob['totalCount'] = 0
@@ -265,7 +285,7 @@ module.exports = function () {
                                 jobs['os'][os][component][job] = [pendJob]
                                 countt = countt+1
                                 
-                            }
+                                }
                         })
                     })
                 })
@@ -286,6 +306,8 @@ module.exports = function () {
                     return _.isObject(el) ? internalClean(el) : el;
                 }
 
+                console.log(jobs["os"]["MAC"])
+                
                 var cleaned =  clean(jobs)
                 var toReturn = new Array()
                 _.forEach(cleaned.os, function (components, os) {
@@ -307,6 +329,7 @@ module.exports = function () {
             }
 
             if (build in buildsResponseCache){
+                console.log("IN CACHE")
                 var data = buildsResponseCache[build]
                 getJobs();
                 return Promise.resolve(data)
@@ -315,26 +338,64 @@ module.exports = function () {
             }
 
         },
-        claimJobs: function (bucket, name, build_id, claim) {
+        // claimJobs: function (bucket, name, build_id, claim) {
 
-            // claim this build an all newer builds
-            var Q = "SELECT meta(" + bucket + ").id,* FROM " + bucket + " WHERE name='" + name + "' AND build_id >= " + build_id
+        //     // claim this build an all newer builds
+        //     var Q = "SELECT meta(" + bucket + ").id,* FROM " + bucket + " WHERE name='" + name + "' AND build_id >= " + build_id
+        //     var _ps = []
+        //     var promise = new Promise(function (resolve, reject) {
+        //         _query(bucket, strToQuery(Q)).catch(reject)
+        //             .then(function (jobs) {
+        //                 jobs.forEach(function (d) {
+        //                     var key = d.id
+        //                     var doc = d.server
+        //                     doc.customClaim = claim  // save new claim tag
+        //                     var p = doUpsert(bucket, key, doc)
+        //                     _ps.push(p)
+        //                 })
+        //                 Promise.all(_ps) // resolve upsert promises
+        //                     .then(resolve).catch(reject)
+        //             })
+        //     })
+        //     return promise
+        // },
+        claimJobs: function(bucket,name,build_id,claim){
+
+            function doUpdate(bucket,claim,os,comp,name,build_id,version){
+                console.log("updating")
+                var Q = "UPDATE `" + bucket + "` t USE KEYS '" + version + 
+                        "' SET JOB.`claim`  =  '" + claim +
+                        "' FOR JOB IN t.`os`.`" + os + "`.`" + comp + "`.`" + name +
+                        "` WHEN JOB.`build_id` = " + build_id + " AND " + 
+                        " JOB.`deleted` = false AND " + 
+                        " JOB.`olderBuild` = false END "
+            
+                var promise = new Promise(function (resolve, reject) {
+                    _query(bucket, strToQuery(Q)).then(function(res){
+                        console.log("updated succeesfully")
+                    })})
+                return promise   
+            }
+            var Q1 = "SELECT os,component,`build` FROM server WHERE name = '" + name + "' AND build_id = " + build_id
             var _ps = []
             var promise = new Promise(function (resolve, reject) {
-                _query(bucket, strToQuery(Q)).catch(reject)
+                _query(bucket, strToQuery(Q1))
                     .then(function (jobs) {
-                        jobs.forEach(function (d) {
-                            var key = d.id
-                            var doc = d.server
-                            doc.customClaim = claim  // save new claim tag
-                            var p = doUpsert(bucket, key, doc)
+                            // console.log(jobs)
+                            var os = jobs[0]['os']
+                            var comp = jobs[0]['component']
+                            var version = jobs[0]['build']
+                            var p = doUpdate("test_eventing",claim,os,comp,name,build_id,version)
                             _ps.push(p)
                         })
-                        Promise.all(_ps) // resolve upsert promises
+                        Promise.all(_ps) // resolve update promises
                             .then(resolve).catch(reject)
                     })
-            })
             return promise
+        
+            
+//             FIRST job.claim  FOR job IN t.os.CENTOS.UNIT.`centos7_unit-simple-test` END FROM `test_eventing` t
+// WHERE t.`build` = "0.0.0-1111" AND ANY job IN t.os.CENTOS.UNIT.`centos7_unit-simple-test` SATISFIES job.build_id = 1926 END
         },
         getBuildSummary: function (buildId) {
             function getBuildDetails() {
