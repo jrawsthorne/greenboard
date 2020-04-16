@@ -80,15 +80,11 @@ angular.module('app.target', [])
                         var version = Data.getSelectedVersion()
                         var testsFilter = Data.getBuildFilter()
 
-                        console.log("HELLO"+target+version+testsFilter+f)
                         var buildsFilter = f
                         var retry = 3
                         var get = function(){QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
-                            console.log("BUILDS ARE NOW"+builds)
                             Data.setVersionBuilds(builds)
-                            console.log(builds.length,scope.activebuildsFilter,buildsFilter)
                             // if(builds.length != buildsFilter && retry!=0){
-                            //     console.log("CALLING AGAIN")
                             //     Data.setBuildsFilter(0)
                             //     setTimeout(function(){get()},3000)
                             //     retry = retry - 1

@@ -19,7 +19,6 @@
                   //       build-controller so that view can be
                   //       notified when a build is selected
                   Timeline.init(builds, id, scope.onChange)
-                  console.log("TIMELINE LINK")
                   // re-render if filterBy has changed
                   scope.$watch(function(){ return Data.getBuildFilter() },
                     function(filterBy, lastFilterBy){
@@ -29,8 +28,6 @@
 
                         // update timeline
                         Timeline.update(builds, id)
-                        console.log(filterBy)
-                        console.log(builds)
                       }
                     })
 		   
@@ -41,7 +38,6 @@
                             return
                         }
                         builds = Data.getVersionBuilds()
-                        console.log(builds)
                         Timeline.update(builds, id)
 
                     });
@@ -50,13 +46,10 @@
                         return Data.getBuildsFilter();
                     }, function (newVal, oldVal) {
                         if (newVal == oldVal){
-                            console.log(newVal,oldVal)
                             return
                         }
-                        console.log("WATCHING")
                         scope.spin = true
                         builds = Data.getVersionBuilds()
-                        console.log(builds)
                         Timeline.update(builds, id)
                         scope.spin = false
                     })

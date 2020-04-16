@@ -18,7 +18,6 @@ angular.module('app.main', [])
             // update target versions when drop down target changes
             $scope.changeVersion = function(newVersion){
                 if(newVersion != version){
-                    console.log(version)
                     Data.setBuildsFilter(10)
                     Data.setBuildFilter(2000)
                     $state.go("target.version", {version: newVersion})
@@ -29,12 +28,9 @@ angular.module('app.main', [])
     .controller('TimelineCtrl', ['$scope', '$state', 'versionBuilds', 'Data',
         function($scope, $state, versionBuilds, Data){
             $scope.versionBuilds = versionBuilds
-            console.log("TIMEclien CTRL")
             
             // on build change reload jobs view
             $scope.onBuildChange = function(build){
-                console.log("BUILD CHANGE")
-                console.log(build)
                 $scope.build = build
                 Data.setBuild(build)
                 if(build.indexOf("-") != -1){ build = build.split("-")[1]}
@@ -77,7 +73,6 @@ angular.module('app.main', [])
                             // requiredJobs = _.filter(activeJobs,["name",jobname,"os"])
                             $scope.len = requiredJobs.length
                             $scope.selectedjobdetails = requiredJobs
-                            console.log(requiredJobs)
                             $scope.selectedjobname = jobname
                             $scope.selectedbuild = requiredJobs[0].build
                     }
@@ -88,9 +83,6 @@ angular.module('app.main', [])
 
                 jobs = _.reject(jobs, "olderBuild", true)
                 jobs = _.reject(jobs, "deleted", true)
-                console.log("UPDATESCOPE")
-                console.log(jobs)
-                console.log(_.filter(jobs,["name","debian10-os_certify_fts"]))
                 var jobsCompleted = _.uniq(_.reject(jobs, ["result", "PENDING"]))
                 var jobsUnstable = _.uniq(_.filter(jobs, ["result", "UNSTABLE"]))
                 var jobsFailed = _.uniq(_.filter(jobs, ["result", "FAILURE"]))
@@ -110,7 +102,6 @@ angular.module('app.main', [])
                 //var jobs = buildJobs[build].value
                 //var allJobs = buildJobs['existing_builds'].value
                 //var toReturn = processJob(jobs, allJobs)
-                console.log(buildJobs)
                 return buildJobs
             }
 
@@ -198,8 +189,6 @@ angular.module('app.main', [])
             var jobs = getJobs()
             updateScopeWithJobs(jobs)
             Data.setBuildJobs(jobs)
-            console.log("JOBS HEREEEEE")
-            console.log(jobs)
             // set sidebar items from build job data
             var allPlatforms = _.uniq(_.map(jobs, "os"))
                 .map(function(k){
@@ -209,7 +198,6 @@ angular.module('app.main', [])
                 .map(function(k){
                     return {key: k, disabled: false}
                 })
-            console.log(allPlatforms)
             Data.setSideBarItems({platforms: allPlatforms, features: allFeatures})
 
 
@@ -219,17 +207,6 @@ angular.module('app.main', [])
             }
 
             $scope.msToTime = msToTime
-            // $scope.link = " "
-            //         function isLink(job){
-            //             console.log("ISLINK")
-            //             if(job["single"]==false){
-            //                 return "#!/jobdetails/"+job["name"]
-            //                 $scope.link = "#!/jobdetails/"+job["name"]
-            //             }
-            //             return job["url"]+job["build_id"]
-            //             $scope.link = " "
-            //         }
-            // $scope.isLink = isLink
             $scope.$watch(function(){ return Data.getActiveJobs() },
                 function(activeJobs){
                     if(activeJobs){
@@ -241,13 +218,7 @@ angular.module('app.main', [])
         }])
     .controller('JobDetailsCtrl',['$scope','$state','$stateParams','Data','target',
                 function($scope,$state,$stateParams,Data,target){
-                    console.log("HERE AT JOb DETAILS CONTROLLER")
-                    // $scope.$watch(function(){
-                    //     return jobDetails
-                    // },function(jobDets){
-                    //     $scope.jobDetails = jobDets
-                    //     console.log(jobDets)
-                    // })
+                    
                     
                     $scope.msToTime = msToTime
                     var jobname = $stateParams.jobName
@@ -261,13 +232,11 @@ angular.module('app.main', [])
                             
                             var requiredJobs = _.filter(activeJobs,["name",jobname])
                                 $scope.jobDetails = requiredJobs
-                                console.log(requiredJobs)
                            
                                 $scope.jobname = jobname
                                 $scope.build = requiredJobs[0].build
                         }
                     )
-                    // console.log($stateParams.activeJobs)
 
     }])
 
@@ -289,7 +258,6 @@ angular.module('app.main', [])
                         oldClaim = scope.job.claim
                     }
                     else{
-                        console.log(scope.job)
                         oldClaim = "No Claim for this build"
                     }
                     $('[data-toggle="popover"]').popover({
@@ -307,7 +275,10 @@ angular.module('app.main', [])
                     var name = scope.job.name
                     var build_id = scope.job.build_id
                     var claim = scope.job.claim
-                    QueryService.claimJob(target, name, build_id, claim)
+                    var os = scope.job.os
+                    var comp = scope.job.component
+                    var version = scope.job.build
+                    QueryService.claimJob(target, name, build_id, claim,os,comp,version)
                         .catch(function(err){
                             scope.job.claim = "error saving claim: "+err.err
                         })

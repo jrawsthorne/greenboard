@@ -1,4 +1,4 @@
-exports.Cluster = '172.23.121.84'
+exports.Cluster = '10.112.195.101'
 exports.RBACUser = "Administrator";
 exports.RBACKPassword = "password";
 exports.DefaultBucket = 'test_eventing'

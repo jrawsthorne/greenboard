@@ -6,7 +6,7 @@ var _ = require('lodash');
 
 module.exports = function () {
 
-    var cluster = new couchbase.Cluster(config.Cluster);
+    var cluster = new couchbase.Cluster(config.Cluster,replicate_to=3);
     cluster.authenticate(config.RBACUser, config.RBACKPassword);
     var db = _db(config.DefaultBucket)
     var buildsResponseCache = {}
@@ -73,6 +73,7 @@ module.exports = function () {
         return new Promise(function (resolve, reject) {
             db.getMulti(docIds, function (error, result) {
                 if (error) {
+                    console.log(error)
                     reject(error)
                 } else {
                     resolve(result)
@@ -81,6 +82,24 @@ module.exports = function () {
         })
     }
 
+    function _upsert(bucket, key, doc){
+        var db = bucketConnections["greenboard"];
+        if (!db.connected){
+            db = _db(bucket);
+            bucketConnections[bucket] = db
+        }
+        return new Promise(function (resolve, reject) {
+            db.upsert(key,doc, function (error, result) {
+                if (error) {
+                    console.log(error)
+                    reject(error);
+                } else {
+                    console.log(result)
+                    resolve(result);
+                }
+            })
+        });
+      }
     
     function _get(bucket, documentId) {
         var db = bucketConnections[bucket];
@@ -205,35 +224,29 @@ module.exports = function () {
         getBuildInfo: function (bucket, build, fun) {
             var db = bucketConnections["greenboard"]
             if (!db.connected){
-                db = _db(bucket);
+                db = _db(bucket);c
                 bucketConnections[bucket] = db
             }
             db.get(build, fun)
         },
         jobsForBuild: function (bucket, build) {
-            var ver = build.split('-')[0]
-            var Q = "SELECT * FROM " + bucket + " WHERE `build` = '" + build + "'"
-            
             function getJobs() {
-                // return _getmulti('greenboard', [build,'existing_builds']).then(function (result) {
-                //     var job = result[build].value
-                //     fs = require("fs")
-                //     fs.writeFile("news.json",JSON.stringify(result[build]))
-                //     var allJobs = result['existing_builds'].value
-                //     var processedJobs =  processJob(job, allJobs, build)
-                //     buildsResponseCache[build] = processedJobs
-                //     return processedJobs
-                // })
-                var Q1 = "SELECT * FROM `test_eventing` USE KEYS ['" + build + "','existing_builds']"
-                return _query('greenboard',strToQuery(Q1)).then(function(result){
-                    fs = require("fs")
-                    fs.writeFile("news.json",JSON.stringify(result))
-                    var job = result[0]["test_eventing"]
-                    var allJobs = result[1]["test_eventing"]
+                return _getmulti('greenboard', [build,'existing_builds_new']).then(function (result) {
+                    console.log(result)
+                    var job = result[build].value
+                    var allJobs = result['existing_builds_new'].value
                     var processedJobs =  processJob(job, allJobs, build)
                     buildsResponseCache[build] = processedJobs
                     return processedJobs
                 })
+                // var Q1 = "SELECT * FROM `test_eventing` USE KEYS ['" + build + "','existing_builds_new']"
+                // return _query('greenboard',strToQuery(Q1)).then(function(result){
+                //     var job = result[0]["test_eventing"]
+                //     var allJobs = result[1]["test_eventing"]
+                //     var processedJobs =  processJob(job, allJobs, build)
+                //     buildsResponseCache[build] = processedJobs
+                //     return processedJobs
+                // })
             }
 
 	        function processJob(jobs, allJobs, buildId) {
@@ -251,8 +264,6 @@ module.exports = function () {
                 }
                
                 countt = 0
-                fs = require("fs")
-                                fs.writeFile("neww.json",JSON.stringify(jobs,null,4))
                 _.forEach(existingJobs, function (components, os) {
                     _.forEach(components, function (jobNames, component) {
                         _.forEach(jobNames, function (name, job) {
@@ -261,14 +272,10 @@ module.exports = function () {
                             }
                             if (!_.has(jobs['os'][os], component)){
                                 jobs['os'][os][component] = {};
-                                if(component == "RQG"){
-                                    console.log("RQG")
-                                }
                             }
                             if (!_.has(jobs['os'][os][component], job) &&
                                 ((name.hasOwnProperty('jobs_in')) &&
                                     (name['jobs_in'].indexOf(version) > -1))) {
-                                
                                 var pendJob = {}
                                 pendJob['pending'] = name.totalCount
                                 pendJob['totalCount'] = 0
@@ -305,8 +312,6 @@ module.exports = function () {
 
                     return _.isObject(el) ? internalClean(el) : el;
                 }
-
-                console.log(jobs["os"]["MAC"])
                 
                 var cleaned =  clean(jobs)
                 var toReturn = new Array()
@@ -359,47 +364,51 @@ module.exports = function () {
         //     })
         //     return promise
         // },
-        claimJobs: function(bucket,name,build_id,claim){
+        claimJobs: function(bucket,name,build_id,claim,os,comp,version){
 
             function doUpdate(bucket,claim,os,comp,name,build_id,version){
-                console.log("updating")
-                var Q = "UPDATE `" + bucket + "` t USE KEYS '" + version + 
-                        "' SET JOB.`claim`  =  '" + claim +
-                        "' FOR JOB IN t.`os`.`" + os + "`.`" + comp + "`.`" + name +
-                        "` WHEN JOB.`build_id` = " + build_id + " AND " + 
-                        " JOB.`deleted` = false AND " + 
-                        " JOB.`olderBuild` = false END "
-            
+                var Q = "SELECT * FROM `test_eventing` USE KEYS '"+version+"'"
+                var _ps = []
                 var promise = new Promise(function (resolve, reject) {
-                    _query(bucket, strToQuery(Q)).then(function(res){
-                        console.log("updated succeesfully")
-                    })})
-                return promise   
-            }
-            var Q1 = "SELECT os,component,`build` FROM server WHERE name = '" + name + "' AND build_id = " + build_id
-            var _ps = []
-            var promise = new Promise(function (resolve, reject) {
-                _query(bucket, strToQuery(Q1))
-                    .then(function (jobs) {
-                            // console.log(jobs)
-                            var os = jobs[0]['os']
-                            var comp = jobs[0]['component']
-                            var version = jobs[0]['build']
-                            var p = doUpdate("test_eventing",claim,os,comp,name,build_id,version)
-                            _ps.push(p)
+                            _query(bucket, strToQuery(Q)).catch(reject)
+                                .then(function (jobs) {
+                                    var newbuildjobs = []
+                                    var buildjobs = jobs[0]["test_eventing"]["os"][os][comp][name]
+                                    buildjobs.forEach(function (d) {
+                                        if(d["build_id"]==build_id){
+                                            d["claim"] = claim
+                                        }
+                                        newbuildjobs.push(d)    
+                                    })
+                                    jobs[0]["test_eventing"]["os"][os][comp][name] = newbuildjobs
+                                    console.log(jobs[0]["test_eventing"]["os"][os][comp][name])
+                                    var p = _upsert("greenboard",version,jobs[0]["test_eventing"]).then(function(res){
+                                        console.log(res)
+                                    })
+                                    _ps.push(p)
+                                })
+                                Promise.all(_ps) 
+                                .then(resolve).catch(reject)
                         })
-                        Promise.all(_ps) // resolve update promises
-                            .then(resolve).catch(reject)
-                    })
-            return promise
-        
+                return promise
+                // var Q = "UPDATE `" + bucket + "` t USE KEYS '" + version + 
+                //         "' SET JOB.`claim`  =  '" + claim +
+                //         "' FOR JOB IN t.`os`.`" + os + "`.`" + comp + "`.`" + name +
+                //         "` WHEN JOB.`build_id` = " + build_id + " AND " + 
+                //         " JOB.`deleted` = false AND " + 
+                //         " JOB.`olderBuild` = false END "
             
-//             FIRST job.claim  FOR job IN t.os.CENTOS.UNIT.`centos7_unit-simple-test` END FROM `test_eventing` t
-// WHERE t.`build` = "0.0.0-1111" AND ANY job IN t.os.CENTOS.UNIT.`centos7_unit-simple-test` SATISFIES job.build_id = 1926 END
+                // var promise = new Promise(function (resolve, reject) {
+                //     _query(bucket, strToQuery(Q)).then(function(res){
+                //         console.log("updated succeesfully")
+                //     })})
+                // return promise   
+            }
+            return doUpdate(bucket,claim,os,comp,name,build_id,version)
         },
         getBuildSummary: function (buildId) {
             function getBuildDetails() {
-                return _getmulti('greenboard', [buildId,'existing_builds']).then(function (result) {
+                return _getmulti('greenboard', [buildId,'existing_builds_new']).then(function (result) {
                     if (!("summary" in buildsResponseCache)){
                         buildsResponseCache["summary"] = {}
                     }
@@ -410,7 +419,7 @@ module.exports = function () {
 
             function processBuildDetails(data) {
                 var build = data[buildId].value;
-                var allJobs = data['existing_builds'].value;
+                var allJobs = data['existing_builds_new'].value;
                 var type = build.type;
 		var version = buildId.split('-')[0]
                 var existingJobs;
