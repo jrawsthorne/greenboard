@@ -231,15 +231,15 @@ module.exports = function () {
         },
         jobsForBuild: function (bucket, build) {
             function getJobs() {
-                return _getmulti('greenboard', [build,'existing_builds_new']).then(function (result) {
+                return _getmulti('greenboard', [build,'existing_builds']).then(function (result) {
                     console.log(result)
                     var job = result[build].value
-                    var allJobs = result['existing_builds_new'].value
+                    var allJobs = result['existing_builds'].value
                     var processedJobs =  processJob(job, allJobs, build)
                     buildsResponseCache[build] = processedJobs
                     return processedJobs
                 })
-                // var Q1 = "SELECT * FROM `test_eventing` USE KEYS ['" + build + "','existing_builds_new']"
+                // var Q1 = "SELECT * FROM `test_eventing` USE KEYS ['" + build + "','existing_builds']"
                 // return _query('greenboard',strToQuery(Q1)).then(function(result){
                 //     var job = result[0]["test_eventing"]
                 //     var allJobs = result[1]["test_eventing"]
@@ -408,7 +408,7 @@ module.exports = function () {
         },
         getBuildSummary: function (buildId) {
             function getBuildDetails() {
-                return _getmulti('greenboard', [buildId,'existing_builds_new']).then(function (result) {
+                return _getmulti('greenboard', [buildId,'existing_builds']).then(function (result) {
                     if (!("summary" in buildsResponseCache)){
                         buildsResponseCache["summary"] = {}
                     }
@@ -419,7 +419,7 @@ module.exports = function () {
 
             function processBuildDetails(data) {
                 var build = data[buildId].value;
-                var allJobs = data['existing_builds_new'].value;
+                var allJobs = data['existing_builds'].value;
                 var type = build.type;
 		var version = buildId.split('-')[0]
                 var existingJobs;

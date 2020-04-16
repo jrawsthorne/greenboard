@@ -19,6 +19,7 @@
                   //       build-controller so that view can be
                   //       notified when a build is selected
                   Timeline.init(builds, id, scope.onChange)
+                  
                   // re-render if filterBy has changed
                   scope.$watch(function(){ return Data.getBuildFilter() },
                     function(filterBy, lastFilterBy){

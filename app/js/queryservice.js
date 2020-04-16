@@ -40,13 +40,6 @@ angular.module('svc.query', [])
 					.then(function (response) {
 						return response.data
                     })
-			},
-			getJobDetails : function (jobName,build){
-				var url = ["getJobDetails",jobName,build].join("/")
-				return $http({"url":url,cache:true})
-				.then(function(response){
-					return response.data
-				})
 			}
 		  }
 		}])

@@ -26,8 +26,7 @@ angular.module('app.sidebar', [])
 	  		  }
 			  
 			  // Detect when build has changed
-			  scope.$watch(function(){ 
-			  return Data.getSideBarItems() }, 
+			  scope.$watch(function(){ return Data.getSideBarItems() }, 
 				function(items, last){
 
 					if(!items) { return }

@@ -28,24 +28,6 @@ app.get('/versions/:bucket?', function(req, res){
   	})
 })
 
-
-app.get('/getJobDetails/:jobName',function(req,res){
-	var runs = []
-	var jobName = req.params.jobName
-	var build = req.params.build
-	client.queryJobDetails(jobName,build)
-	.then(function(data){
-		runs = data[0]['runs']
-		console.log(runs)
-	   res.send(runs);
-	}).catch(function(err){
-		// err
-	  console.log(err)
-	  res.send(runs)
-	})
-})
-
-
 app.get('/builds/:bucket/:version/:testsFilter/:buildsFilter', function(req, res){
 
   var bucket = req.params.bucket
@@ -63,15 +45,13 @@ app.get('/builds/:bucket/:version/:testsFilter/:buildsFilter', function(req, res
   				return -1
   			}
   			return 0
-		  })
-		res.send(JSON.stringify(data))
-
+		})
+		res.send(data)
   	}).catch(function(err){
   		// err
 		console.log(err)
 		res.send(builds)
-	  })
-
+	})
 })
 
 
@@ -108,6 +88,7 @@ app.get('/jobs/:build/:bucket?', function(req, res){
 
 	var bucket = req.params.bucket
     var build = req.params.build
+
 	client.jobsForBuild(bucket, build)
 		.then(function(breakdown){
 
@@ -128,7 +109,6 @@ app.get('/info/:build/:bucket', function(req, res){
 			console.log(err)
 			res.send({err: err})
 		}  else {
-			console.log(info)
 			res.send(info)
 		}
 	})
@@ -152,7 +132,6 @@ app.post('/claim/:bucket/:name/:build_id', function (req, res) {
 });
 
 app.get('/getBuildSummary/:buildId', function (req, res) {
-
 	var buildId = req.params.buildId;
 	client.getBuildSummary(buildId).then(function (buildDetails) {
 		res.send(buildDetails)
@@ -160,7 +139,6 @@ app.get('/getBuildSummary/:buildId', function (req, res) {
     	console.log(err)
 	})
 });
-
 
 
 var server = app.listen(config.httpPort, config.httpListen, function () {

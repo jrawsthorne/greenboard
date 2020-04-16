@@ -18,7 +18,6 @@ angular.module('svc.data', [])
             _buildsFilterBy = DEFAULT_BUILDS_FILTER_BY
             _initUrlParams = null
             _buildInfo = {}
-            _jobdetails = []
 
             function updateLocationUrl(type, key, disabled){
                 var typeArgs = $location.search()[type]

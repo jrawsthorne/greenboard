@@ -53,7 +53,6 @@ angular.module('app.target', [])
                         QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
                             Data.setVersionBuilds(builds)
                             Data.setBuildFilter(scope.activeFilter)
-
                             return Data.getVersionBuilds()
                         })
                         scope.activeFilter = f
@@ -98,7 +97,6 @@ angular.module('app.target', [])
                         get();
                         // Data.setBuildsFilter(scope.activeBuildFilter)
                         scope.activeBuildFilter = f
-                        
                     }
 
                 }

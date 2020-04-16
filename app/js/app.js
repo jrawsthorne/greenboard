@@ -35,9 +35,9 @@ app.run(['$location', '$rootScope', 'Data', function($location, $rootScope, Data
 
 app.config(['$stateProvider', '$urlRouterProvider',
     function($stateProvider, $urlRouterProvider){
+
         // TODO: external bootstrap with now testing build!
         $urlRouterProvider.otherwise("/server/7.0.0/latest");
-
         $stateProvider              
             .state('target', {
                 url: "/:target",
@@ -49,6 +49,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
                     }],
                     targetVersions: ['$stateParams', 'Data', 'QueryService',
                         function($stateParams, Data, QueryService){
+
                             var target = $stateParams.target
                             var versions = Data.getTargetVersions(target)
                             if(!versions){
@@ -66,6 +67,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
                 resolve: {
                     version: ['$stateParams', '$state', '$location', 'targetVersions', 'target',
                         function($stateParams, $state, $location, targetVersions, target){
+                            
                             var version = $stateParams.version || "latest"
                             if ((version == "latest") || targetVersions.indexOf(version) == -1){
                                 // uri is either latest version or some unknown version of target
