@@ -46,16 +46,16 @@ angular.module('app.target', [])
                     scope.passFilters = [0, 2000, 5000]
 
                     scope.changeFilter = function (f) {
-			var target = Data.getCurrentTarget()
+			            var target = Data.getCurrentTarget()
                         var version = Data.getSelectedVersion()
                         var buildsFilter = Data.getBuildsFilter()
                         var testsFilter = f
                         QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
                             Data.setVersionBuilds(builds)
+                            Data.setBuildFilter(scope.activeFilter)
                             return Data.getVersionBuilds()
                         })
                         scope.activeFilter = f
-                        Data.setBuildFilter(scope.activeFilter)
                     }
 
                 }
@@ -75,16 +75,28 @@ angular.module('app.target', [])
                     scope.buildsFilters = [5, 10, 25, 100]
 
                     scope.changeBuildsFilter = function (f) {
-			var target = Data.getCurrentTarget()
+			            var target = Data.getCurrentTarget()
                         var version = Data.getSelectedVersion()
                         var testsFilter = Data.getBuildFilter()
+
                         var buildsFilter = f
-                        QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
+                        var retry = 3
+                        var get = function(){QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
                             Data.setVersionBuilds(builds)
+                            // if(builds.length != buildsFilter && retry!=0){
+                            //     Data.setBuildsFilter(0)
+                            //     setTimeout(function(){get()},3000)
+                            //     retry = retry - 1
+                            // }
+                            // else{
+                            Data.setBuildsFilter(scope.activeBuildFilter)
+                            // }
                             return Data.getVersionBuilds()
-                        })
+                            
+                        })}
+                        get();
+                        // Data.setBuildsFilter(scope.activeBuildFilter)
                         scope.activeBuildFilter = f
-                        Data.setBuildsFilter(scope.activeBuildFilter)
                     }
 
                 }

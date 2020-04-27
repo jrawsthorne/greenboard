@@ -18,6 +18,8 @@ angular.module('app.main', [])
             // update target versions when drop down target changes
             $scope.changeVersion = function(newVersion){
                 if(newVersion != version){
+                    Data.setBuildsFilter(10)
+                    Data.setBuildFilter(2000)
                     $state.go("target.version", {version: newVersion})
                 }
             }
@@ -26,7 +28,7 @@ angular.module('app.main', [])
     .controller('TimelineCtrl', ['$scope', '$state', 'versionBuilds', 'Data',
         function($scope, $state, versionBuilds, Data){
             $scope.versionBuilds = versionBuilds
-
+            
             // on build change reload jobs view
             $scope.onBuildChange = function(build){
                 $scope.build = build
@@ -54,20 +56,45 @@ angular.module('app.main', [])
             $scope.reverse = true
             $scope.activePanel = 0
 
+            
+
+                $scope.onselect = 
+                    function(jobname,os,comp){
+                        var activeJobs = Data.getActiveJobs()
+                        // activeJobs = _.reject(activeJobs, "olderBuild", true)
+                        activeJobs = _.reject(activeJobs, "deleted", true)
+                        
+                        var filters = {"name":jobname,"os":os,"component":comp}
+                        var requiredJobs = activeJobs
+                        _.forEach(filters, function(value, key) {
+                            requiredJobs = _.filter(requiredJobs, [key,value]);
+                        });
+
+                            // requiredJobs = _.filter(activeJobs,["name",jobname,"os"])
+                            $scope.len = requiredJobs.length
+                            $scope.selectedjobdetails = requiredJobs
+                            $scope.selectedjobname = jobname
+                            $scope.selectedbuild = requiredJobs[0].build
+                    }
+                
+            
+
             function updateScopeWithJobs(jobs){
+
                 jobs = _.reject(jobs, "olderBuild", true)
-		jobs = _.reject(jobs, "deleted", true)
+                jobs = _.reject(jobs, "deleted", true)
                 var jobsCompleted = _.uniq(_.reject(jobs, ["result", "PENDING"]))
                 var jobsUnstable = _.uniq(_.filter(jobs, ["result", "UNSTABLE"]))
                 var jobsFailed = _.uniq(_.filter(jobs, ["result", "FAILURE"]))
                 var jobsPending = _.uniq(_.filter(jobs, ["result", "PENDING"]))
+                
 
                 $scope.panelTabs = [
                     {title: "Jobs Completed", jobs: jobsCompleted, active: true},
                     {title: "Jobs Unstable", jobs: jobsUnstable},
                     {title: "Jobs Failed", jobs: jobsFailed},
                     {title: "Jobs Pending", jobs: jobsPending}
-                ]
+                ]                
             }
 
             function getJobs() {
@@ -81,13 +108,15 @@ angular.module('app.main', [])
             function processJob(jobs, allJobs) {
                 var type = jobs.type
                 var existingJobs
-		var version = Data.getSelectedVersion()
+		        var version = Data.getSelectedVersion()
                 if (type == "mobile"){
                     existingJobs = _.pick(allJobs, "mobile")
                 }
                 else {
                     existingJobs = _.omit(allJobs, "mobile")
                     existingJobs = _.merge(allJobs['server'], allJobs['build'])
+                    fs = require('fs');
+                    fs.writeFile("merge.json", existingJobs)
                 }
                 _.forEach(existingJobs, function (components, os) {
                     _.forEach(components, function (jobNames, component) {
@@ -160,7 +189,6 @@ angular.module('app.main', [])
             var jobs = getJobs()
             updateScopeWithJobs(jobs)
             Data.setBuildJobs(jobs)
-
             // set sidebar items from build job data
             var allPlatforms = _.uniq(_.map(jobs, "os"))
                 .map(function(k){
@@ -179,7 +207,6 @@ angular.module('app.main', [])
             }
 
             $scope.msToTime = msToTime
-
             $scope.$watch(function(){ return Data.getActiveJobs() },
                 function(activeJobs){
                     if(activeJobs){
@@ -189,6 +216,30 @@ angular.module('app.main', [])
 
 
         }])
+    .controller('JobDetailsCtrl',['$scope','$state','$stateParams','Data','target',
+                function($scope,$state,$stateParams,Data,target){
+                    
+                    
+                    $scope.msToTime = msToTime
+                    var jobname = $stateParams.jobName
+                    
+                    $scope.$watch(function(){
+                        return Data.getActiveJobs()
+                    },
+                        function(activeJobs){
+                            // activeJobs = _.reject(activeJobs, "olderBuild", true)
+                            activeJobs = _.reject(activeJobs, "deleted", true)
+                            
+                            var requiredJobs = _.filter(activeJobs,["name",jobname])
+                                $scope.jobDetails = requiredJobs
+                           
+                                $scope.jobname = jobname
+                                $scope.build = requiredJobs[0].build
+                        }
+                    )
+
+    }])
+
     .directive('claimCell', ['Data', 'QueryService', function(Data, QueryService){
         return {
             restrict: 'E',
@@ -200,6 +251,22 @@ angular.module('app.main', [])
                     scope.job.claim = scope.job.customClaim
                 }
 
+                var oldClaim = ""
+                
+                $(elem).mouseover(function(){
+                    if(scope.job.claim != ""){
+                        oldClaim = scope.job.claim
+                    }
+                    else{
+                        oldClaim = "No Claim for this build"
+                    }
+                    $('[data-toggle="popover"]').popover({
+                        placement : 'top',
+                        trigger : 'hover',
+                        content : scope.job.claim
+                    });
+                
+                });
                 // publish on blur
                 scope.editClaim = false
                 scope.saveClaim = function(){
@@ -208,7 +275,10 @@ angular.module('app.main', [])
                     var name = scope.job.name
                     var build_id = scope.job.build_id
                     var claim = scope.job.claim
-                    QueryService.claimJob(target, name, build_id, claim)
+                    var os = scope.job.os
+                    var comp = scope.job.component
+                    var version = scope.job.build
+                    QueryService.claimJob(target, name, build_id, claim,os,comp,version)
                         .catch(function(err){
                             scope.job.claim = "error saving claim: "+err.err
                         })

@@ -38,8 +38,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
 
         // TODO: external bootstrap with now testing build!
         $urlRouterProvider.otherwise("/server/7.0.0/latest");
-
-        $stateProvider
+        $stateProvider              
             .state('target', {
                 url: "/:target",
                 abstract: true,
@@ -68,7 +67,7 @@ app.config(['$stateProvider', '$urlRouterProvider',
                 resolve: {
                     version: ['$stateParams', '$state', '$location', 'targetVersions', 'target',
                         function($stateParams, $state, $location, targetVersions, target){
-
+                            
                             var version = $stateParams.version || "latest"
                             if ((version == "latest") || targetVersions.indexOf(version) == -1){
                                 // uri is either latest version or some unknown version of target
@@ -97,7 +96,9 @@ app.config(['$stateProvider', '$urlRouterProvider',
                     versionBuilds: ['$stateParams', 'QueryService', 'Data', 'target', 'version', 'testsFilter',
                         'buildsFilter',
                         function($stateParams, QueryService, Data, target, version, testsFilter, buildsFilter){
-                            return QueryService.getBuilds(target, version, testsFilter, buildsFilter).then(function(builds){
+                            var tests = Data.getBuildFilter()
+                            var builds = Data.getBuildsFilter()
+                            return QueryService.getBuilds(target, version, tests, builds).then(function(builds){
                                 Data.setVersionBuilds(builds)
                                 return Data.getVersionBuilds()
                             })
@@ -113,13 +114,16 @@ app.config(['$stateProvider', '$urlRouterProvider',
                     $state.go('target.version.builds.build.jobs')
                 }],
                 resolve: {
-                    build: ['$stateParams', '$state', 'versionBuilds',
-                        function($stateParams, $state, versionBuilds){
+                    build: ['$stateParams', '$state', 'versionBuilds','Data',
+                        function($stateParams, $state, versionBuilds,Data){
+                            
                             var build = $stateParams.build || "latest"
                             if((build == "latest") && (versionBuilds.length > 0)){
                                 var vbuild = versionBuilds[versionBuilds.length-1].build
                                 $stateParams.build = vbuild.split('-')[1]
                             } else if(versionBuilds.length <= 0){
+                                Data.setBuildsFilter(5)
+                                Data.setBuildFilter(0)
                                 $state.go('target.version.builds', {target: $stateParams.target, version: $stateParams.version})
                             }
                             return $stateParams.build

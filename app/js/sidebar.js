@@ -11,7 +11,7 @@ angular.module('app.sidebar', [])
 	  		  scope.disablePlatforms = false
 	  		  scope.disableFeatures = false
               scope.buildVersion = Data.getBuild()
-
+			  
 	  		  scope.toggleAll = function(type){
 	  		  	var isDisabled;
 	  		  	
@@ -24,7 +24,7 @@ angular.module('app.sidebar', [])
 		  		 }
 	  		  	Data.toggleAllSidebarItems(type, isDisabled)
 	  		  }
-
+			  
 			  // Detect when build has changed
 			  scope.$watch(function(){ return Data.getSideBarItems() }, 
 				function(items, last){
@@ -32,13 +32,14 @@ angular.module('app.sidebar', [])
 					if(!items) { return }
 
 					// only update sidebar items on build change
-					if(items.buildVersion != last.buildVersion){
+					// if(items.buildVersion != last.buildVersion){
 						scope.buildVersion = items.buildVersion
 					    scope.sidebarItems = {
 					        platforms: _.map(items["platforms"], "key"),
 					        features: _.map(items["features"], "key")
-					    }
-					}
+						}
+						
+					// }
 
 					// if all sidebar items of a type selected
 					// enable all checkmark

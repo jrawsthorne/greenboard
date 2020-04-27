@@ -13,7 +13,6 @@ app.use(express.static('app'));
 app.use(bodyParser.json());
 
 app.get('/versions/:bucket?', function(req, res){
-
   var bucket = req.params.bucket
   var versions = []
   client.queryVersions(bucket)
@@ -46,13 +45,13 @@ app.get('/builds/:bucket/:version/:testsFilter/:buildsFilter', function(req, res
   				return -1
   			}
   			return 0
-  		})
-	 	res.send(data);
+		})
+		res.send(data)
   	}).catch(function(err){
   		// err
 		console.log(err)
 		res.send(builds)
-  	})
+	})
 })
 
 
@@ -120,8 +119,10 @@ app.post('/claim/:bucket/:name/:build_id', function (req, res) {
   var name = req.params.name
   var build_id = req.params.build_id
   var claim = req.body.claim
-
-  client.claimJobs(bucket, name, build_id, claim)
+  var os = req.body.os
+  var comp = req.body.comp
+  var version = req.body.build
+  client.claimJobs(bucket, name, build_id, claim,os,comp,version)
     .then(function(jobs){
       res.send('POST request to the homepage');
     }).catch(function(err){
@@ -138,6 +139,7 @@ app.get('/getBuildSummary/:buildId', function (req, res) {
     	console.log(err)
 	})
 });
+
 
 var server = app.listen(config.httpPort, config.httpListen, function () {
   var host = server.address().address;
