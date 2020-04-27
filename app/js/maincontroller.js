@@ -12,6 +12,13 @@ angular.module('app.main', [])
 
             // update target versions when drop down target changes
             $scope.changeTarget = function(target){
+                if(target == 'cblite' || target == 'sync_gateway'){
+                    Data.setBuildFilter(0)
+                }
+                else
+                {
+                    Data.setBuildFilter(2000)
+                }
                 $state.go("target.version", {target: target, version: "latest"})
             }
 
@@ -19,7 +26,7 @@ angular.module('app.main', [])
             $scope.changeVersion = function(newVersion){
                 if(newVersion != version){
                     Data.setBuildsFilter(10)
-                    Data.setBuildFilter(2000)
+                    //Data.setBuildFilter(2000)
                     $state.go("target.version", {version: newVersion})
                 }
             }

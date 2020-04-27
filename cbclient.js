@@ -20,7 +20,7 @@ module.exports = function () {
         // var sdk = _db('sdk')
         // var mobile = _db('mobile')
         // var builds = _db('builds')
-	var greenboard = _db('test_eventing')
+	var greenboard = _db('greenboard')
         // buckets['server'] = server
         // buckets['sdk'] = sdk
         // buckets['mobile'] = mobile
@@ -154,7 +154,7 @@ module.exports = function () {
         },
         queryVersions: function (bucket) {
             var Q = "SELECT DISTINCT SPLIT(`build`,'-')[0] AS version " +
-                "FROM `test_eventing` WHERE SPLIT(`build`,'-')[0] is not null AND type = '" + bucket + "' ORDER BY version LIMIT 40"
+                "FROM `greenboard` WHERE SPLIT(`build`,'-')[0] is not null AND type = '" + bucket + "' ORDER BY version LIMIT 40"
             // var Q = "SELECT DISTINCT SPLIT(`build`,'-')[0] AS version"+
             //         " FROM "+bucket+" where SPLIT(`build`,'-')[0] is not null ORDER BY version"
             function queryVersion() {
@@ -179,7 +179,7 @@ module.exports = function () {
             }
         },
         queryBuilds: function (bucket, version, testsFilter, buildsFilter) {
-            var Q = "SELECT totalCount, failCount, `build` FROM `test_eventing` WHERE `build` LIKE '" + version + "%' " +
+            var Q = "SELECT totalCount, failCount, `build` FROM `greenboard` WHERE `build` LIKE '" + version + "%' " +
                 " AND type = '" + bucket + "' AND totalCount >= " + testsFilter + " ORDER BY `build` DESC limit " + buildsFilter
             // var Q = "SELECT SUM(totalCount) AS totalCount, SUM(failCount) AS failCount, `build`  FROM "
             //     +bucket+" WHERE `build` LIKE '"+version+"%' GROUP BY `build` HAVING SUM(totalCount) >= " + testsFilter +
@@ -231,18 +231,20 @@ module.exports = function () {
         },
         jobsForBuild: function (bucket, build) {
             function getJobs() {
-                return _getmulti('greenboard', [build,'existing_builds']).then(function (result) {
+                var doc_id = build.concat(bucket)
+                var existing_builds_id = "existing_builds".concat(bucket)
+                return _getmulti('greenboard', [doc_id,existing_builds_id]).then(function (result) {
                     console.log(result)
-                    var job = result[build].value
-                    var allJobs = result['existing_builds'].value
+                    var job = result[doc_id].value
+                    var allJobs = result[existing_builds_id].value
                     var processedJobs =  processJob(job, allJobs, build)
                     buildsResponseCache[build] = processedJobs
                     return processedJobs
                 })
-                // var Q1 = "SELECT * FROM `test_eventing` USE KEYS ['" + build + "','existing_builds']"
+                // var Q1 = "SELECT * FROM `greenboard` USE KEYS ['" + build + "','existing_builds']"
                 // return _query('greenboard',strToQuery(Q1)).then(function(result){
-                //     var job = result[0]["test_eventing"]
-                //     var allJobs = result[1]["test_eventing"]
+                //     var job = result[0]["greenboard"]
+                //     var allJobs = result[1]["greenboard"]
                 //     var processedJobs =  processJob(job, allJobs, build)
                 //     buildsResponseCache[build] = processedJobs
                 //     return processedJobs
@@ -253,15 +255,7 @@ module.exports = function () {
                 var type = jobs.type
                 var existingJobs
                 var version = buildId.split('-')[0]
-            
-                if (type == "mobile"){
-                    existingJobs = _.pick(allJobs, "mobile")
-                }
-                else {
-                    existingJobs = _.omit(allJobs, "mobile")
-                    existingJobs = _.merge(allJobs['server'], allJobs['build'])
-                    
-                }
+                existingJobs = _.pick(allJobs, bucket)
                
                 countt = 0
                 _.forEach(existingJobs, function (components, os) {
@@ -367,22 +361,22 @@ module.exports = function () {
         claimJobs: function(bucket,name,build_id,claim,os,comp,version){
 
             function doUpdate(bucket,claim,os,comp,name,build_id,version){
-                var Q = "SELECT * FROM `test_eventing` USE KEYS '"+version+"'"
+                var Q = "SELECT * FROM `greenboard` USE KEYS '"+version+"_"+bucket+"'"
                 var _ps = []
                 var promise = new Promise(function (resolve, reject) {
                             _query(bucket, strToQuery(Q)).catch(reject)
                                 .then(function (jobs) {
                                     var newbuildjobs = []
-                                    var buildjobs = jobs[0]["test_eventing"]["os"][os][comp][name]
+                                    var buildjobs = jobs[0]["greenboard"]["os"][os][comp][name]
                                     buildjobs.forEach(function (d) {
                                         if(d["build_id"]==build_id){
                                             d["claim"] = claim
                                         }
                                         newbuildjobs.push(d)    
                                     })
-                                    jobs[0]["test_eventing"]["os"][os][comp][name] = newbuildjobs
-                                    console.log(jobs[0]["test_eventing"]["os"][os][comp][name])
-                                    var p = _upsert("greenboard",version,jobs[0]["test_eventing"]).then(function(res){
+                                    jobs[0]["greenboard"]["os"][os][comp][name] = newbuildjobs
+                                    console.log(jobs[0]["greenboard"]["os"][os][comp][name])
+                                    var p = _upsert("greenboard",version,jobs[0]["greenboard"]).then(function(res){
                                         console.log(res)
                                     })
                                     _ps.push(p)
