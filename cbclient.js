@@ -231,8 +231,8 @@ module.exports = function () {
         },
         jobsForBuild: function (bucket, build) {
             function getJobs() {
-                var doc_id = build.concat(bucket)
-                var existing_builds_id = "existing_builds".concat(bucket)
+                var doc_id = build.concat("_",bucket)
+                var existing_builds_id = "existing_builds".concat("_",bucket)
                 return _getmulti('greenboard', [doc_id,existing_builds_id]).then(function (result) {
                     console.log(result)
                     var job = result[doc_id].value
