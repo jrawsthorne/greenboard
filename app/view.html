@@ -8,7 +8,9 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="#/greenboard">Greenboard</a>
-      <a class="navbar-brand" href="http://172.23.98.63:8201">Greenboard(Old)</a>
+      <a class="navbar-brand" href="http://greenboard.hq.couchbase.com:8201">Greenboard(Old)</a>
+      <a class="navbar-brand text-right" data-toggle="modal" data-target="#greenboardHelp" >
+        <div style="cursor:pointer;">Help</div> </a>
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav navbar-right">
@@ -40,9 +42,6 @@
         <div class="col-sm-2 col-sm-push-1">
           <filter-selector change-filter="changeFilter" />
         </div>
-        <div class="col-sm-1 col-sm-push-1">
-          <button class="btn btn-primary" ui-sref="compareBuilds">Compare</button>
-        </div>
       </div>
 
       <!-- build view -->
@@ -51,5 +50,60 @@
   </div>
   <div class="col-sm-2 infobar">
     <view-infobar></view-infobar>
+  </div>
+
+</div>
+<div class="modal fade bd-example-modal-lg" id="greenboardHelp" tabindex="-1" role="dialog" aria-labelledby="greenboardHelpTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h2 class="modal-title text-center">Greenboard general help</h2>
+      </div>
+      <div class="modal-body">
+        <div class="text-center">
+          <div style="width:80%; margin:0 10%;">
+            <h3 class="modal-title" >Delete Jobs from greenboard</h3>
+            <br />
+            <p style="text-align:justify">Deleting jobs in jenkins will no longer delete the entry from greenboard going forward.
+              For this reason, if you must absolutely must delete a job entry from greenboard, run
+              <a href="http://qa.sc.couchbase.com/job/delete_jobs_from_greenboard"> this </a> job. The job takes following parameters.
+            </p>
+            <ol class="text-left">
+              <li>version : Build version from where the job has to be deleted ex: 7.0.0-1234</li>
+              <li>jobs_url : Full job url with the build_id which has to be deleted from greenboard.
+                ex: http://qa.sc.couchbase.com/job/test_suite_executor/196463/</li>
+              <li>target : Which product to delete the job from. (server, cblite, sync_gateway)</li>
+            </ol>
+            <p style="text-align:justify">
+              Run the above job to delete any particular line from the job. A capability to delete from the greenboard
+              will be added in the future based on the need.
+            </p>
+            <br>
+            <h4 class="modal-title">Known issues with deleting jobs</h4>
+            <p style="text-align:justify">
+              Since the new greenboard relies on eventing to gather data, it sometimes happens that the deleted data might
+              get re-written back in the database. This is due to data race condition that is currently hard to solve since
+              eventing does not support cas based inserts. Please re-run the above job if the data re-appears on the
+              greenboard.
+            </p>
+            <br /><br />
+            <h3 class="modal-title" >Old greenboard</h3>
+            <br />
+            <p style="text-align:justify">
+              Old greenboard is still functional for a while incase you want to use the old, but slower greenboard.
+              Know that new features will not be enabled on greenboard going forward. The old greenboard can be accessed
+              by clicking on the Greenboard(Old) icon on top of the page.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        <!-- <button type="button" class="btn btn-secondary">Close</button> -->
+      </div>
+    </div>
   </div>
 </div>
