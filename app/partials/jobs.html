@@ -28,7 +28,8 @@
             <tbody>
               <tr ng-repeat="job in panelTabs[activePanel].jobs | orderBy:predicate:reverse">
                 <!-- <td><a href={{job.url}}{{job.build_id}}>{{job.name}}</a></td> -->
-                <td>  <a  ng-click="onselect(job.name,job.os,job.component)" data-toggle="modal" data-target="#exampleModalCenter">{{job.name}}</a></td>
+                <td>  <a style="cursor:pointer;" ng-click="onselect(job.name,job.os,job.component)"
+                         data-toggle="modal" data-target="#exampleModalCenter">{{job.name}}</a></td>
                 <!-- <td>  <a  href="#!/jobdetails/{{job.name}}">{{job.name}}</a></td> -->
                 <td><span class={{job.result}}>{{job.result}}</span></td>
                 <td>{{job.totalCount - job.failCount}}</td>
