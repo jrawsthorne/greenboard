@@ -255,7 +255,8 @@ module.exports = function () {
                 var type = jobs.type
                 var existingJobs
                 var version = buildId.split('-')[0]
-                existingJobs = _.pick(allJobs, bucket)
+
+                existingJobs = allJobs[bucket]
                
                 countt = 0
                 _.forEach(existingJobs, function (components, os) {
