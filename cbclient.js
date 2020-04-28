@@ -308,20 +308,44 @@ module.exports = function () {
                     return _.isObject(el) ? internalClean(el) : el;
                 }
                 
-                var cleaned =  clean(jobs)
+                var cleaned =  jobs
                 var toReturn = new Array()
                 _.forEach(cleaned.os, function (components, os) {
                     _.forEach(components, function (jobNames, component) {
                         _.forEach(jobNames, function (jobs, jobName) {
+                            var all_deleted = true;
                             _.forEach(jobs, function (jobDetail, job) {
+                                if(!jobDetail['deleted']) {
+                                    all_deleted = false;
+                                }
                                 var tempJob = _.cloneDeep(jobDetail)
                                 tempJob['build'] = cleaned.build
                                 tempJob['name'] = jobName
                                 tempJob['component'] = component
                                 tempJob['os'] = os
                                 toReturn[toReturn.length] = tempJob
-                                
                             })
+                            if (all_deleted) {
+                                const existingJobName = existingJobs[os][component][jobName];
+                                let pendJob = {};
+                                pendJob['build'] = cleaned.build;
+                                pendJob['name'] = jobName;
+                                pendJob['component'] = component;
+                                pendJob['os'] = os;
+                                pendJob['pending'] = existingJobName.totalCount
+                                pendJob['totalCount'] = 0
+                                pendJob['failCount'] = 0
+                                pendJob['result'] = "PENDING"
+                                pendJob['priority'] = existingJobName.priority
+                                pendJob['url'] = existingJobName.url
+                                pendJob['build_id'] = ""
+                                pendJob['claim'] = ""
+                                pendJob['deleted'] = false
+                                pendJob['olderBuild'] = false
+                                pendJob['duration'] = 0
+                                pendJob['color'] = ''
+                                toReturn[toReturn.length] = pendJob
+                            }
                         })
                     })
                 })
