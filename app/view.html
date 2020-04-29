@@ -85,12 +85,20 @@
               will be added in the future based on the need.
             </p>
             <br>
-            <h4 class="modal-title">Known issues with deleting jobs</h4>
+            <h4 class="modal-title">Known issues</h4>
             <p style="text-align:justify">
               Since the new greenboard relies on eventing to gather data, it sometimes happens that the deleted data might
               get re-written back in the database. This is due to data race condition that is currently hard to solve since
               eventing does not support cas based inserts. Please re-run the above job if the data re-appears on the
               greenboard.
+            </p>
+            <br />
+            <p style="text-align:justify">
+              You might see some differences in numbers in the failed jobs. This is due to the fact that there is a bug
+              in the old collector that assigns incorrect number to the total number of tests in the job based on the last
+              job it processed. So while the fix for this bug is made available, please note that both the numbers shown
+              on both greenboard (new and old) are wrong. This issue is seen on jobs where
+              the job had not generated any test results, usually the case with install failures. 
             </p>
             <br /><br />
             <h3 class="modal-title" >Old greenboard</h3>
