@@ -8,7 +8,7 @@
         <span class="icon-bar"></span>
       </button>
       <a class="navbar-brand" href="#/greenboard">Greenboard</a>
-      <a class="navbar-brand" href="http://greenboard.hq.couchbase.com:8201">Greenboard(Old)</a>
+      <a class="navbar-brand" href="http://greenboard.hq.couchbase.com:8201" target="_blank">Greenboard(Old)</a>
       <a class="navbar-brand text-right" data-toggle="modal" data-target="#greenboardHelp" >
         <div style="cursor:pointer;">Help</div> </a>
     </div>
@@ -68,8 +68,11 @@
             <h3 class="modal-title" >Delete Jobs from greenboard</h3>
             <br />
             <p style="text-align:justify">Deleting jobs in jenkins will no longer delete the entry from greenboard going forward.
-              For this reason, if you must absolutely must delete a job entry from greenboard, run
-              <a href="http://qa.sc.couchbase.com/job/delete_jobs_from_greenboard"> this </a> job. The job takes following parameters.
+              This is because rerunning a job has to improve the results in general and the data should not be fudged
+              in the dashboard in principle. However having said that,  if you absolutely must delete a job entry from greenboard, run
+              <a href="http://qa.sc.couchbase.com/job/delete_jobs_from_greenboard" target="_blank">
+                http://qa.sc.couchbase.com/job/delete_jobs_from_greenboard </a> job.
+              The job takes following parameters.
             </p>
             <ol class="text-left">
               <li>version : Build version from where the job has to be deleted ex: 7.0.0-1234</li>
