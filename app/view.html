@@ -100,6 +100,21 @@
               <li>type : Product from where the job has to be deleted</li>
             </ol>
             <br>
+            <h4 class="modal-title">Deleting all job links for a particular job for a particular build</h4>
+            <p style="text-align:justify">
+              To delete all the job links (all reruns) for a particular job for a particular build, run
+              <a href="http://qa.sc.couchbase.com/job/delete_job_details_greenboard/" target="_blank">
+              http://qa.sc.couchbase.com/job/delete_job_details_greenboard/ </a> job.
+              This will delete the job from run details and will show up on pending jobs. Also rerun data will be
+              deleted and rerunning the job will make it a fresh run.
+              The job takes following parameters.
+            </p>
+            <ol class="text-left">
+              <li>job_to_delete : Job name to be deleted from Greenboard. Example: centos-backup_recovery_merge</li>
+              <li>build_num : Build number from where to remove the job (example 6.5.0-3123) /</li>
+              <li>type : Product from where the job has to be deleted</li>
+            </ol>
+            <br>
             <h4 class="modal-title">Known issues</h4>
             <p style="text-align:justify">
               Since the new greenboard relies on eventing to gather data, it sometimes happens that the deleted data might
