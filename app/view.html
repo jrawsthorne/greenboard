@@ -115,6 +115,37 @@
               <li>type : Product from where the job has to be deleted</li>
             </ol>
             <br>
+            <h4 class="modal-title">Deleting from pending jobs list</h4>
+            <p style="text-align:justify">
+              To delete a job from the pending jobs list, run
+              <a href="http://qa.sc.couchbase.com/job/delete_jobs_from_existing_jobs_greeenboard/" target="_blank">
+                http://qa.sc.couchbase.com/job/delete_jobs_from_existing_jobs_greeenboard/ </a> job. This will make the
+              greenboard ignore showing the job from a particular version until it's run at some later point in time.
+              The job takes following parameters.
+            </p>
+            <ol class="text-left">
+              <li>job_to_delete : Job name to be deleted from existing jobs list on Greenboard
+                (to delete from pending jobs)</li>
+              <li>version : Version number from where to remove the build (example 6.5.0) /</li>
+              <li>type : Product from where the job has to be deleted</li>
+            </ol>
+            <br>
+            <h4 class="modal-title">Updating job details for a particular job for a particular build</h4>
+            <p style="text-align:justify">
+              Due to a bug in eventing, sometimes few job details like the result and count could be collectd
+              erroneously. To update the job with correct details, run
+              <a href="http://qa.sc.couchbase.com/job/update_greenboard_job_details/" target="_blank">
+              http://qa.sc.couchbase.com/job/update_greenboard_job_details/ </a> job.
+              This will update the job to show the correct data. Refresh greenboard twice to get the updated data
+              The job takes following parameters.
+            </p>
+            <ol class="text-left">
+              <li>job_link : 	URl of the job whose details have to be updated
+                example: http://qa.sc.couchbase.com/job/test_suite_executor/223555</li>
+              <li>build_num : Build number from where to remove the job (example 6.5.0-3123) /</li>
+              <li>type : Product from where the job has to be deleted</li>
+            </ol>
+            <br>
             <h4 class="modal-title">Known issues</h4>
             <p style="text-align:justify">
               Since the new greenboard relies on eventing to gather data, it sometimes happens that the deleted data might
