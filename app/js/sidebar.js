@@ -40,8 +40,8 @@ angular.module('app.sidebar', [])
 						scope.buildVersion = items.buildVersion
 					    scope.sidebarItems = {
 					        platforms: _.map(items["platforms"], "key"),
-							features: _.pluck(items["features"], "key"),
-							serverVersions: _.pluck(items["serverVersions"], "key")
+							features: _.map(items["features"], "key"),
+							serverVersions: _.map(items["serverVersions"], "key")
 						}
 						
 					// }
@@ -50,7 +50,7 @@ angular.module('app.sidebar', [])
 					// enable all checkmark
 					var noPlatformsDisabled = !_.some(_.map(items["platforms"], "disabled"))
 					var noFeaturesDisabled = !_.some(_.map(items["features"], "disabled"))
-					var noServerVersionsDisabled = !_.any(_.pluck(items["serverVersions"], "disabled"))
+					var noServerVersionsDisabled = !_.any(_.map(items["serverVersions"], "disabled"))
 					scope.disablePlatforms = !noPlatformsDisabled
 					scope.disableFeatures = !noFeaturesDisabled
 					scope.disabledServerVersions = !noServerVersionsDisabled

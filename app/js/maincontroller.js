@@ -205,7 +205,7 @@ angular.module('app.main', [])
                 .map(function(k){
                     return {key: k, disabled: false}
                 })
-            var allVersions = _.uniq(_.pluck(buildJobs, "server_version"))
+            var allVersions = _.uniq(_.map(buildJobs, "server_version"))
                 .map(function (k) {
                     return k ? {key: k, disabled: false}: null
                 })

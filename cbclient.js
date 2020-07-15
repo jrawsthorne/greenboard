@@ -284,6 +284,9 @@ module.exports = function () {
                                 pendJob['olderBuild'] = false
                                 pendJob['duration'] = 0
                                 pendJob['color'] = ''
+                                if(name.hasOwnProperty('server_version')){
+                                    pendJob['server_version'] = name.server_version
+                                }
                                 jobs['os'][os][component][job] = [pendJob]
                                 countt = countt+1
                                 
@@ -344,6 +347,9 @@ module.exports = function () {
                                 pendJob['olderBuild'] = false
                                 pendJob['duration'] = 0
                                 pendJob['color'] = ''
+                                if(existingJobs.hasOwnProperty('server_version')){
+                                    pendJob['server_version'] = existingJobs.server_version
+                                }
                                 toReturn[toReturn.length] = pendJob
                             }
                         })
