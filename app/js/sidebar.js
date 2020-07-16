@@ -50,7 +50,7 @@ angular.module('app.sidebar', [])
 					// enable all checkmark
 					var noPlatformsDisabled = !_.some(_.map(items["platforms"], "disabled"))
 					var noFeaturesDisabled = !_.some(_.map(items["features"], "disabled"))
-					var noServerVersionsDisabled = !_.any(_.map(items["serverVersions"], "disabled"))
+					var noServerVersionsDisabled = !_.some(_.map(items["serverVersions"], "disabled"))
 					scope.disablePlatforms = !noPlatformsDisabled
 					scope.disableFeatures = !noFeaturesDisabled
 					scope.disabledServerVersions = !noServerVersionsDisabled
