@@ -350,7 +350,10 @@ module.exports = function () {
                                 if(existingJobs.hasOwnProperty('server_version')){
                                     pendJob['server_version'] = existingJobs.server_version
                                 }
-                                toReturn[toReturn.length] = pendJob
+                                if(existingJobName.hasOwnProperty('jobs_in')
+                                    && existingJobName['jobs_in'].indexOf(version) > -1) {
+                                    toReturn[toReturn.length] = pendJob
+                                }
                             }
                         })
                     })
