@@ -395,7 +395,8 @@ module.exports = function () {
         claimJobs: function(bucket,name,build_id,claim,os,comp,version){
 
             function doUpdate(bucket,claim,os,comp,name,build_id,version){
-                var Q = "SELECT * FROM `greenboard` USE KEYS '"+version+"_"+bucket+"'"
+                const key = `${version}_${bucket}`;
+                var Q = "SELECT * FROM greenboard USE KEYS '"+key+"'";
                 var _ps = []
                 var promise = new Promise(function (resolve, reject) {
                             _query(bucket, strToQuery(Q)).catch(reject)
@@ -410,7 +411,7 @@ module.exports = function () {
                                     })
                                     jobs[0]["greenboard"]["os"][os][comp][name] = newbuildjobs
                                     console.log(jobs[0]["greenboard"]["os"][os][comp][name])
-                                    var p = _upsert("greenboard",version,jobs[0]["greenboard"]).then(function(res){
+                                    var p = _upsert("greenboard",key,jobs[0]["greenboard"]).then(function(res){
                                         console.log(res)
                                     })
                                     _ps.push(p)
