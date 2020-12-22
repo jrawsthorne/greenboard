@@ -413,6 +413,13 @@ module.exports = function () {
                                     console.log(jobs[0]["greenboard"]["os"][os][comp][name])
                                     var p = _upsert("greenboard",key,jobs[0]["greenboard"]).then(function(res){
                                         console.log(res)
+                                        // update cache
+                                        if (version in buildsResponseCache) {
+                                            const jobToUpdate = buildsResponseCache[version].find(job => job.build_id === parseInt(build_id) && job.os === os && job.component === comp);
+                                            if (jobToUpdate) {
+                                                jobToUpdate.claim = claim;
+                                            }
+                                        }
                                     })
                                     _ps.push(p)
                                 })
