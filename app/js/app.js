@@ -102,7 +102,13 @@ app.config(['$stateProvider', '$urlRouterProvider',
                                 Data.setVersionBuilds(builds)
                                 return Data.getVersionBuilds()
                             })
-                        }]
+                        }],
+                    claimSummary: ['$stateParams', 'QueryService', 'Data',
+                    function($stateParams, QueryService, Data){
+                        console.log($stateParams)
+                        // console.log(Data.getBuild())
+                        return QueryService.getClaimSummary($stateParams.target, $stateParams.version + "-" + "4226").then(summary => {});
+                    }]
                 }
             })
             .state('target.version.builds.build', {

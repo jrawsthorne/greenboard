@@ -240,7 +240,7 @@ module.exports = function () {
                     var processedJobs =  processJob(job, allJobs, build)
                     buildsResponseCache[build] = processedJobs
                     return processedJobs
-                })
+                }).catch(() => ([]))
                 // var Q1 = "SELECT * FROM `greenboard` USE KEYS ['" + build + "','existing_builds']"
                 // return _query('greenboard',strToQuery(Q1)).then(function(result){
                 //     var job = result[0]["greenboard"]
@@ -586,6 +586,32 @@ module.exports = function () {
             }
             return getBuildDetails();
 
+        },
+        claimSummary: async (bucket, build) => {
+            let jobs = buildsResponseCache[build]
+            if (!jobs) {
+                jobs = await API.jobsForBuild(bucket, build);
+            }
+            const claimCounts = {}
+            for (const claim of Object.keys(config.CLAIM_MAP)) {
+                 claimCounts[claim] = 0;
+            }
+            for (const job of jobs) {
+                if (job["claim"] !== "" && !job["olderBuild"]) {
+                    for (const claim of Object.keys(claimCounts)) {
+                        if (job["claim"].indexOf(claim) >= 0) {
+                            claimCounts[claim] += 1;
+                        }
+                    }
+                }
+            }
+            const claims = []
+            for (const [claim, count] of Object.entries(claimCounts)) {
+                if (count > 0) {
+                    claims.push({ claim, count })
+                }
+            }
+            return claims;
         }
     };
 
